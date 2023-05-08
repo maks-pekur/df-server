@@ -20,6 +20,10 @@ export class CategoriesService {
     return this.categoryModel.find().exec();
   }
 
+  findOne(id: string) {
+    return this.categoryModel.findById(id);
+  }
+
   update(id: string, updateCategoryDto: UpdateCategoryDto) {
     return this.categoryModel.findByIdAndUpdate(id);
   }

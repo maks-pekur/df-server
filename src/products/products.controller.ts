@@ -31,12 +31,12 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  update(@Param('_id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productsService.update(id, updateProductDto);
   }
 
   @Delete(':id')
-  remove(@Param('_id') id: string) {
+  remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
 }
