@@ -11,14 +11,25 @@ export class UsersService {
     const newUser = new this.userModel(signupUserDto);
     return newUser.save();
   }
+
   login(req) {
     return { user: req.user, msg: 'Logged in' };
   }
-  logout() {
-    return '';
+
+  check(req) {
+    return req.user;
   }
 
-  findOne(phoneNumber: string) {
+  logout(req) {
+    req.session.destroy();
+    return { msg: 'session has ended' };
+  }
+
+  findOneByPhone(phoneNumber: string) {
     return this.userModel.findOne({ where: { phoneNumber } });
+  }
+
+  findOne(id: string) {
+    return this.userModel.findById(id);
   }
 }

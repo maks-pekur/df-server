@@ -15,33 +15,27 @@ export class Product {
   @Prop([String])
   imageLinks: string[];
   @Prop()
-  additionalInfo: string;
-  @Prop()
   sizes: object[];
   @Prop()
   modifiers: object[];
-  @Prop()
+  @Prop({ defaultValue: 0 })
   fatAmount: number;
-  @Prop()
+  @Prop({ defaultValue: 0 })
   proteinsAmount: number;
-  @Prop()
+  @Prop({ defaultValue: 0 })
   carbohydratesAmount: number;
-  @Prop()
+  @Prop({ defaultValue: 0 })
   energyAmount: number;
-  @Prop()
+  @Prop({ defaultValue: false })
   isDeleted: boolean;
   @Prop([String])
   tags: string[];
-  @Prop()
+  @Prop({ defaultValue: 0 })
   weight: number;
-  @Prop()
-  groupId: string;
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
   productCategoryId: Category;
-  @Prop()
+  @Prop({ defaultValue: 'good' })
   type: string;
-  @Prop()
-  splittable: boolean;
   @Prop()
   measureUnit: string;
   @Prop()

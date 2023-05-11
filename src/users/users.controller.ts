@@ -9,6 +9,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { LocalAuthGuard } from 'src/auth/local.auth.guard';
 import { SignupUserDto } from './dto/signup-user.dto';
 import { UsersService } from './users.service';
@@ -29,6 +30,18 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   login(@Request() req) {
     return this.usersService.login(req);
+  }
+
+  @Get('/check-auth')
+  @UseGuards(AuthenticatedGuard)
+  checkAuth(@Request() req) {
+    return this.usersService.check(req);
+  }
+
+  @Get('/logout')
+  @UseGuards(AuthenticatedGuard)
+  logout(@Request() req) {
+    return this.usersService.logout(req);
   }
 
   @Get()
