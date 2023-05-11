@@ -31,5 +31,35 @@ export class CartService {
     return cart.save();
   }
 
-  async updateCount(count: number, userId: string) {}
+  async updateCount(
+    count: number,
+    partId: number | string,
+  ): Promise<{ count: number }> {
+    await this.cartModel.updateOne({ count }, { where: { partId } });
+
+    const part = await this.cartModel.findOne({ where: { partId } });
+
+    return { count: part.count };
+  }
+
+  async updateTotalPrice(
+    totalPrice: number,
+    partId: number | string,
+  ): Promise<{ totalPrice: number }> {
+    await this.cartModel.updateOne({ totalPrice }, { where: { partId } });
+
+    const part = await this.cartModel.findOne({ where: { partId } });
+
+    return { totalPrice: part.totalPrice };
+  }
+
+  async remove(partId: number | string): Promise<void> {
+    const part = await this.cartModel.findOne({ where: { partId } });
+
+    await part.deleteOne();
+  }
+
+  async removeAll(userId: number | string): Promise<void> {
+    await this.cartModel.deleteMany({ where: { userId } });
+  }
 }
