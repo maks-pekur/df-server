@@ -6,9 +6,7 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
-import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 
@@ -16,45 +14,45 @@ import { AddToCartDto } from './dto/add-to-cart.dto';
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
-  @UseGuards(AuthenticatedGuard)
+  // @UseGuards(AuthenticatedGuard)
   @Get(':id')
-  getAll(@Param('id') userId: string) {
+  getAll(@Param('id') userId: number | string) {
     return this.cartService.findAll(userId);
   }
 
-  @UseGuards(AuthenticatedGuard)
+  // @UseGuards(AuthenticatedGuard)
   @Post('/add')
   addToCart(@Body() addToCartDto: AddToCartDto) {
     return this.cartService.add(addToCartDto);
   }
 
-  @UseGuards(AuthenticatedGuard)
-  @Patch('/count/:id')
+  // @UseGuards(AuthenticatedGuard)
+  @Patch('/qty/:id')
   updateCount(
-    @Body() { count }: { count: number },
-    @Param('id') partId: string,
+    @Param('id') productId: number | string,
+    @Body() { quantity }: { quantity: number },
   ) {
-    return this.cartService.updateCount(count, partId);
+    return this.cartService.updateCount(productId, quantity);
   }
 
-  @UseGuards(AuthenticatedGuard)
+  // @UseGuards(AuthenticatedGuard)
   @Patch('/total-price/:id')
   updateTotalPrice(
-    @Body() { totalPrice }: { totalPrice: number },
-    @Param('id') partId: string,
+    @Param('id') productId: number | string,
+    @Body() totalPrice: number,
   ) {
-    return this.cartService.updateTotalPrice(totalPrice, partId);
+    return this.cartService.updateTotalPrice(productId, totalPrice);
   }
 
-  @UseGuards(AuthenticatedGuard)
+  // @UseGuards(AuthenticatedGuard)
   @Delete('/one/:id')
-  removeOne(@Param('id') partId: string) {
-    return this.cartService.remove(partId);
+  removeOne(@Param('id') id: number | string) {
+    return this.cartService.remove(id);
   }
 
-  @UseGuards(AuthenticatedGuard)
+  // @UseGuards(AuthenticatedGuard)
   @Delete('/all/:id')
-  removeAll(@Param('id') userId: string) {
+  removeAll(@Param('id') userId: number | string) {
     return this.cartService.removeAll(userId);
   }
 }

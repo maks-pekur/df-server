@@ -15,15 +15,18 @@ export class Cart {
   name: string;
 
   @Prop()
-  productCategoryId: string;
+  description: string;
+
+  @Prop({ default: 0 })
+  price: number;
 
   @Prop()
   imageLink: string;
 
-  @Prop()
-  count: number;
+  @Prop({ default: 1 })
+  quantity: number;
 
-  @Prop()
+  @Prop({ default: 0 })
   totalPrice: number;
 }
 

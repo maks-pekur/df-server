@@ -16,50 +16,37 @@ export class CartService {
   ) {}
 
   async findAll(userId: number | string): Promise<Cart[]> {
-    return this.cartModel.find({ where: { userId } });
+    return this.cartModel.find({ userId }).exec();
   }
 
   async add(addToCartDto: AddToCartDto) {
-    const cart = new Cart();
+    const cart = new this.cartModel(addToCartDto);
     const user = await this.usersService.findOne(addToCartDto.userId);
     const product = await this.productsService.findOne(addToCartDto.productId);
 
     cart.userId = user.id;
     cart.productId = product.id;
     cart.name = product.name;
+    cart.description = product.description;
+    cart.imageLink = product.imageLinks[0];
+    // cart.totalPrice = product.price
 
     return cart.save();
   }
 
-  async updateCount(
-    count: number,
-    partId: number | string,
-  ): Promise<{ count: number }> {
-    await this.cartModel.updateOne({ count }, { where: { partId } });
-
-    const part = await this.cartModel.findOne({ where: { partId } });
-
-    return { count: part.count };
+  async updateCount(id: number | string, quantity: number) {
+    return await this.cartModel.findByIdAndUpdate(id, { quantity });
   }
 
-  async updateTotalPrice(
-    totalPrice: number,
-    partId: number | string,
-  ): Promise<{ totalPrice: number }> {
-    await this.cartModel.updateOne({ totalPrice }, { where: { partId } });
-
-    const part = await this.cartModel.findOne({ where: { partId } });
-
-    return { totalPrice: part.totalPrice };
+  async updateTotalPrice(id: number | string, totalPrice: number) {
+    await this.cartModel.findByIdAndUpdate(id, { totalPrice });
   }
 
-  async remove(partId: number | string): Promise<void> {
-    const part = await this.cartModel.findOne({ where: { partId } });
-
-    await part.deleteOne();
+  async remove(id: number | string): Promise<void> {
+    await this.cartModel.findByIdAndDelete(id);
   }
 
   async removeAll(userId: number | string): Promise<void> {
-    await this.cartModel.deleteMany({ where: { userId } });
+    await this.cartModel.deleteMany({ userId });
   }
 }
