@@ -6,12 +6,12 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
-  app.enableCors();
+  // app.enableCors();
   app.use(
     session({
       secret: 'keyword',
       resave: false,
-      saveUninitialized: true,
+      saveUninitialized: false,
     }),
   );
   app.use(passport.initialize());
