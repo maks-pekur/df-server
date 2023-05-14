@@ -21,6 +21,7 @@ export class PopularsService {
 
     newPopular.productId = product.id;
     newPopular.name = product.name;
+    newPopular.productCategoryId = product.productCategoryId;
     newPopular.imageLinks = [...product.imageLinks];
     // newPopular.price = product.price;
 
