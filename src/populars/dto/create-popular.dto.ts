@@ -1,1 +1,3 @@
-export class CreatePopularDto {}
+export class CreatePopularDto {
+  
+}

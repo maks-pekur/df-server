@@ -20,8 +20,8 @@ export class Cart {
   @Prop({ default: 0 })
   price: number;
 
-  @Prop()
-  imageLink: string;
+  @Prop([String])
+  imageLinks: string[];
 
   @Prop({ default: 1 })
   quantity: number;
