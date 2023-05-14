@@ -11,23 +11,23 @@ export class PopularsService {
     @InjectModel(Popular.name) private popularModel: Model<Popular>,
   ) {}
 
-  create(createPopularDto: CreatePopularDto) {
-    return 'This action adds a new popular';
+  async create(createPopularDto: CreatePopularDto) {
+    return 'This';
   }
 
-  findAll() {
-    return this.popularModel.find().exec();
+  async findAll() {
+    return await this.popularModel.find().exec();
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return `This action returns a #${id} popular`;
   }
 
-  update(id: number, updatePopularDto: UpdatePopularDto) {
+  async update(id: number, updatePopularDto: UpdatePopularDto) {
     return `This action updates a #${id} popular`;
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return `This action removes a #${id} popular`;
   }
 }
