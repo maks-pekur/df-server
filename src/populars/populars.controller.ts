@@ -7,7 +7,6 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { CreatePopularDto } from './dto/create-popular.dto';
 import { UpdatePopularDto } from './dto/update-popular.dto';
 import { PopularsService } from './populars.service';
 
@@ -16,8 +15,8 @@ export class PopularsController {
   constructor(private readonly popularsService: PopularsService) {}
 
   @Post()
-  create(@Body() createPopularDto: CreatePopularDto) {
-    return this.popularsService.create(createPopularDto);
+  create(@Body() id: string) {
+    return this.popularsService.create(id);
   }
 
   @Get()

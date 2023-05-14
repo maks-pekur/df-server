@@ -12,7 +12,7 @@ export class PopularsService {
     private readonly productsService: ProductsService,
   ) {}
 
-  async create(id: string | number) {
+  async create(id: string) {
     const newPopular = new this.popularModel();
     const product = await this.productsService.findOne(id);
 
