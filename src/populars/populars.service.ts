@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ProductsService } from 'src/products/products.service';
+import { CreatePopularDto } from './dto/create-popular.dto';
 import { UpdatePopularDto } from './dto/update-popular.dto';
 import { Popular } from './entities/popular.entity';
 
@@ -12,13 +13,15 @@ export class PopularsService {
     private readonly productsService: ProductsService,
   ) {}
 
-  async create(id: string) {
-    const newPopular = new this.popularModel();
-    const product = await this.productsService.findOne(id);
+  async create(createPopularDto: CreatePopularDto) {
+    const newPopular = new this.popularModel(createPopularDto);
+    const product = await this.productsService.findOne(
+      createPopularDto.productId,
+    );
 
     newPopular.productId = product.id;
     newPopular.name = product.name;
-    newPopular.imageLinks = product.imageLinks[0];
+    newPopular.imageLinks = [...product.imageLinks];
     // newPopular.price = product.price;
 
     return newPopular.save();

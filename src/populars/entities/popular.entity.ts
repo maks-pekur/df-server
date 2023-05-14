@@ -9,7 +9,7 @@ export class Popular {
   name: string;
   @Prop()
   productId: string;
-  @Prop()
-  imageLinks: string;
+  @Prop([String])
+  imageLinks: string[];
 }
 export const PopularSchema = SchemaFactory.createForClass(Popular);
