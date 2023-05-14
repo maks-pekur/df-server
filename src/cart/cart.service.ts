@@ -28,7 +28,7 @@ export class CartService {
     cart.productId = product.id;
     cart.name = product.name;
     cart.description = product.description;
-    cart.imageLinks = [...product.imageLinks[0]];
+    cart.imageLinks = [...product.imageLinks];
     // cart.totalPrice = product.price
 
     return cart.save();
