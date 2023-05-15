@@ -7,9 +7,6 @@ export type ProductDocument = HydratedDocument<Product>;
 @Schema()
 export class Product {
   @Prop()
-  _id: string;
-
-  @Prop()
   code: string;
 
   @Prop({ required: true })
@@ -39,6 +36,9 @@ export class Product {
   @Prop({ default: 0 })
   energyAmount: number;
 
+  @Prop({ default: 0 })
+  price: number;
+
   @Prop({ default: false })
   isDeleted: boolean;
 
@@ -49,7 +49,7 @@ export class Product {
   weight: number;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
-  productCategoryId: Category;
+  categoryId: Category;
 
   @Prop({ default: 'good' })
   type: string;
@@ -68,9 +68,6 @@ export class Product {
 
   @Prop()
   seoKeywords: string;
-
-  @Prop()
-  _v: number;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

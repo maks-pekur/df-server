@@ -20,6 +20,10 @@ export class CreateProductDto {
   @IsOptional()
   description: string;
 
+  @IsNumber()
+  @IsOptional()
+  price: number;
+
   @IsArray()
   @IsNotEmpty()
   imageLinks: string[];
@@ -60,7 +64,7 @@ export class CreateProductDto {
 
   @IsString()
   @IsNotEmpty()
-  productCategoryId: string;
+  categoryId: string;
 
   @IsString()
   @IsOptional()

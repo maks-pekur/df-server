@@ -11,7 +11,7 @@ export class ProductsService {
     @InjectModel(Product.name) private productModel: Model<Product>,
   ) {}
 
-  async create(createProductDto: CreateProductDto): Promise<Product> {
+  async addProduct(createProductDto: CreateProductDto): Promise<Product> {
     try {
       const newProduct = new this.productModel(createProductDto);
       return newProduct.save();
@@ -20,7 +20,7 @@ export class ProductsService {
     }
   }
 
-  async findAllProducts(): Promise<Product[]> {
+  async getAllProducts(): Promise<Product[]> {
     try {
       return this.productModel.find().exec();
     } catch (error) {
@@ -28,12 +28,24 @@ export class ProductsService {
     }
   }
 
-  async findOneProduct(id: string): Promise<Product> {
+  async getProduct(id: string): Promise<Product> {
     try {
       return this.productModel.findById(id);
     } catch (error) {
       throw error;
     }
+  }
+
+  async getProductsByCategory(category: string): Promise<Product[]> {
+    let products = await this.getAllProducts();
+
+    if (category) {
+      products = products.filter(
+        (product) => product.categoryId.toString() === category,
+      );
+    }
+
+    return products;
   }
 
   async updateProduct(id: string, updateProductDto: UpdateProductDto) {
@@ -44,11 +56,8 @@ export class ProductsService {
     }
   }
 
-  async removeProduct(id: string) {
-    try {
-      return this.productModel.findByIdAndDelete(id);
-    } catch (error) {
-      throw error;
-    }
+  async deleteProduct(id: string): Promise<any> {
+    const deletedProduct = await this.productModel.findByIdAndRemove(id);
+    return deletedProduct;
   }
 }

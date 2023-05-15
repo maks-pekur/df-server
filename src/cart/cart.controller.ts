@@ -3,56 +3,43 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
-  Patch,
   Post,
+  Request,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
-import { AddToCartDto } from './dto/add-to-cart.dto';
+import { CartItemDTO } from './dto/cart-item.dto';
 
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
-  // @UseGuards(AuthenticatedGuard)
-  @Get(':id')
-  getAll(@Param('id') userId: number | string) {
-    return this.cartService.findAll(userId);
+  @Get('/:id')
+  async get(@Param('id') userId: string) {
+    const cart = await this.cartService.getCart(userId);
+    return cart;
   }
 
-  // @UseGuards(AuthenticatedGuard)
-  @Post('/add')
-  addToCart(@Body() addToCartDto: AddToCartDto) {
-    return this.cartService.add(addToCartDto);
+  @Post('/')
+  async addItemToCart(@Request() req, @Body() cartItemDTO: CartItemDTO) {
+    const userId = req.user.userId;
+    const cart = await this.cartService.addItemToCart(userId, cartItemDTO);
+    return cart;
   }
 
-  // @UseGuards(AuthenticatedGuard)
-  @Patch('/qty/:id')
-  updateCount(
-    @Param('id') productId: number | string,
-    @Body() { quantity }: { quantity: number },
-  ) {
-    return this.cartService.updateCount(productId, quantity);
+  @Delete('/')
+  async removeItemFromCart(@Request() req, @Body() { productId }) {
+    const userId = req.user.userId;
+    const cart = await this.cartService.removeItemFromCart(userId, productId);
+    if (!cart) throw new NotFoundException('Item does not exist');
+    return cart;
   }
 
-  // @UseGuards(AuthenticatedGuard)
-  @Patch('/total-price/:id')
-  updateTotalPrice(
-    @Param('id') productId: number | string,
-    @Body() totalPrice: number,
-  ) {
-    return this.cartService.updateTotalPrice(productId, totalPrice);
-  }
-
-  // @UseGuards(AuthenticatedGuard)
-  @Delete('/one/:id')
-  removeOne(@Param('id') id: number | string) {
-    return this.cartService.remove(id);
-  }
-
-  // @UseGuards(AuthenticatedGuard)
-  @Delete('/all/:id')
-  removeAll(@Param('id') userId: number | string) {
-    return this.cartService.removeAll(userId);
+  @Delete('/:id')
+  async deleteCart(@Param('id') userId: string) {
+    const cart = await this.cartService.deleteCart(userId);
+    if (!cart) throw new NotFoundException('Cart does not exist');
+    return cart;
   }
 }
