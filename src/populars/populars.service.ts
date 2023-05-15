@@ -15,11 +15,12 @@ export class PopularsService {
 
   async create(createPopularDto: CreatePopularDto) {
     const newPopular = new this.popularModel(createPopularDto);
-    const product = await this.productsService.findOne(
+
+    const product = await this.productsService.findOneProduct(
       createPopularDto.productId,
     );
 
-    newPopular.productId = product.id;
+    newPopular.productId = product._id;
     newPopular.name = product.name;
     newPopular.productCategoryId = product.productCategoryId;
     newPopular.imageLinks = [...product.imageLinks];

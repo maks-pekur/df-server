@@ -21,31 +21,31 @@ export class UsersController {
   @Post('/signup')
   @HttpCode(HttpStatus.CREATED)
   @Header('content-type', 'application/json')
-  signup(@Body() signupUserDto: SignupUserDto) {
+  async signup(@Body() signupUserDto: SignupUserDto) {
     return this.usersService.signup(signupUserDto);
   }
 
   @Post('/login')
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
-  login(@Request() req) {
-    return this.usersService.login(req);
+  async login(@Body() loginUser: { phoneNumber: string }) {
+    return this.usersService.login(loginUser.phoneNumber);
   }
 
   @Get('/check-auth')
   @UseGuards(AuthenticatedGuard)
-  checkAuth(@Request() req) {
+  async checkAuth(@Request() req) {
     return this.usersService.check(req);
   }
 
   @Get('/logout')
   @UseGuards(AuthenticatedGuard)
-  logout(@Request() req) {
+  async logout(@Request() req) {
     return this.usersService.logout(req);
   }
 
   @Get()
-  findOne(@Body() phoneNumber: string) {
+  async findOne(@Body() phoneNumber: string) {
     return this.usersService.findOne(phoneNumber);
   }
 }

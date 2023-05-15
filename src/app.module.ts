@@ -10,6 +10,7 @@ import { PopularsModule } from './populars/populars.module';
 import { ProductsModule } from './products/products.module';
 import { StoriesModule } from './stories/stories.module';
 import { UsersModule } from './users/users.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     PopularsModule,
     StoriesModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

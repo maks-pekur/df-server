@@ -22,10 +22,12 @@ export class CartService {
   async add(addToCartDto: AddToCartDto) {
     const cart = new this.cartModel(addToCartDto);
     const user = await this.usersService.findOne(addToCartDto.userId);
-    const product = await this.productsService.findOne(addToCartDto.productId);
+    const product = await this.productsService.findOneProduct(
+      addToCartDto.productId,
+    );
 
     cart.userId = user.id;
-    cart.productId = product.id;
+    cart.productId = product._id;
     cart.name = product.name;
     cart.description = product.description;
     cart.imageLinks = [...product.imageLinks];

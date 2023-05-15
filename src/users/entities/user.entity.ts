@@ -8,6 +8,9 @@ export class User {
   @Prop({ required: true })
   phoneNumber: string;
 
+  @Prop()
+  name: string;
+
   @Prop({ type: Date })
   birthDay: Date;
 

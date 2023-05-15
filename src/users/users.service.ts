@@ -12,8 +12,21 @@ export class UsersService {
     return newUser.save();
   }
 
-  login(req) {
-    return { user: req.user, msg: 'Logged in' };
+  login(phoneNumber) {
+    try {
+      const userExist = this.userModel.findOne({ phoneNumber });
+
+      if (!userExist) {
+        throw new Error('User not found');
+      }
+
+      return {
+        success: true,
+        message: 'Login successful',
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
   check(req) {
@@ -25,8 +38,8 @@ export class UsersService {
     return { msg: 'session has ended' };
   }
 
-  findOneByPhone(phoneNumber: string) {
-    return this.userModel.findOne({ where: { phoneNumber } });
+  findOneByPhoneNumber(phoneNumber: string) {
+    return this.userModel.findOne({ phoneNumber });
   }
 
   findOne(id: string) {

@@ -1,25 +1,88 @@
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+
 export class CreateProductDto {
-  readonly code: string;
-  readonly name: string;
-  readonly description: string;
-  readonly imageLinks: string[];
-  readonly additionalInfo: string;
-  readonly sizes: object[];
-  readonly modifiers: object[];
-  readonly fatAmount: number;
-  readonly proteinsAmount: number;
-  readonly carbohydratesAmount: number;
-  readonly energyAmount: number;
-  readonly isDeleted: boolean;
-  readonly tags: string[];
-  readonly weight: number;
-  readonly groupId: string;
-  readonly productCategoryId: string;
-  readonly type: string;
-  readonly splittable: boolean;
-  readonly measureUnit: string;
-  readonly seoDescription: string;
-  readonly seoTitle: string;
-  readonly seoText: string;
-  readonly seoKeywords: string;
+  @IsString()
+  @IsOptional()
+  code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  description: string;
+
+  @IsArray()
+  @IsNotEmpty()
+  imageLinks: string[];
+
+  @IsArray()
+  sizes: object[];
+
+  @IsArray()
+  @IsOptional()
+  modifiers: string[];
+
+  @IsNumber()
+  @IsOptional()
+  fatAmount: number;
+
+  @IsNumber()
+  @IsOptional()
+  proteinsAmount: number;
+
+  @IsNumber()
+  @IsOptional()
+  carbohydratesAmount: number;
+
+  @IsNumber()
+  @IsOptional()
+  energyAmount: number;
+
+  @IsBoolean()
+  isDeleted: boolean;
+
+  @IsOptional()
+  @IsArray()
+  tags: string[];
+
+  @IsNumber()
+  @IsOptional()
+  weight: number;
+
+  @IsString()
+  @IsNotEmpty()
+  productCategoryId: string;
+
+  @IsString()
+  @IsOptional()
+  type: string;
+
+  @IsString()
+  @IsOptional()
+  measureUnit: string;
+
+  @IsString()
+  @IsOptional()
+  seoDescription: string;
+
+  @IsString()
+  @IsOptional()
+  seoTitle: string;
+
+  @IsString()
+  @IsOptional()
+  seoText: string;
+
+  @IsString()
+  @IsOptional()
+  seoKeywords: string;
 }

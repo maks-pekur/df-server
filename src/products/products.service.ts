@@ -11,24 +11,44 @@ export class ProductsService {
     @InjectModel(Product.name) private productModel: Model<Product>,
   ) {}
 
-  create(createProductDto: CreateProductDto): Promise<Product> {
-    const newProduct = new this.productModel(createProductDto);
-    return newProduct.save();
+  async create(createProductDto: CreateProductDto): Promise<Product> {
+    try {
+      const newProduct = new this.productModel(createProductDto);
+      return newProduct.save();
+    } catch (error) {
+      throw error;
+    }
   }
 
-  findAll(): Promise<Product[]> {
-    return this.productModel.find().exec();
+  async findAllProducts(): Promise<Product[]> {
+    try {
+      return this.productModel.find().exec();
+    } catch (error) {
+      throw error;
+    }
   }
 
-  findOne(id: string) {
-    return this.productModel.findById(id);
+  async findOneProduct(id: string): Promise<Product> {
+    try {
+      return this.productModel.findById(id);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  update(id: string, updateProductDto: UpdateProductDto) {
-    return this.productModel.findByIdAndUpdate(id, updateProductDto);
+  async updateProduct(id: string, updateProductDto: UpdateProductDto) {
+    try {
+      return this.productModel.findByIdAndUpdate({ _id: id }, updateProductDto);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  remove(id: string) {
-    return this.productModel.findByIdAndRemove(id);
+  async removeProduct(id: string) {
+    try {
+      return this.productModel.findByIdAndDelete(id);
+    } catch (error) {
+      throw error;
+    }
   }
 }
