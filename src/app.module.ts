@@ -11,6 +11,8 @@ import { ProductsModule } from './products/products.module';
 import { StoriesModule } from './stories/stories.module';
 import { UsersModule } from './users/users.module';
 import { OrdersModule } from './orders/orders.module';
+import { PaymentModule } from './payment/payment.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { OrdersModule } from './orders/orders.module';
     PopularsModule,
     StoriesModule,
     OrdersModule,
+    PaymentModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

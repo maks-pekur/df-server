@@ -31,9 +31,6 @@ export class OrderedItems {
 @Schema({ timestamps: true })
 export class Order {
   @Prop({ required: true })
-  orderId: string;
-
-  @Prop({ required: true })
   userId: string;
 
   @Prop({ required: true, type: Object })

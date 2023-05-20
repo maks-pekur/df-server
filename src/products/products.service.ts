@@ -28,7 +28,7 @@ export class ProductsService {
     }
   }
 
-  async getProduct(id: string): Promise<Product> {
+  async getOneProduct(id: string): Promise<Product> {
     try {
       return this.productModel.findById(id);
     } catch (error) {

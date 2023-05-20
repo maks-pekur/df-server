@@ -1,30 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CartItemDTO } from './dto/cart-item.dto';
+import { CartItemDto } from './dto/cart-item.dto';
 import { Cart, CartDocument } from './entities/cart.entity';
 
 @Injectable()
 export class CartService {
   constructor(@InjectModel(Cart.name) private cartModel: Model<Cart>) {}
 
-  async createCart(
-    userId: string,
-    cartItemDTO: CartItemDTO,
-    subTotalPrice: number,
-    totalPrice: number,
-  ): Promise<Cart> {
-    const newCart = await this.cartModel.create({
-      userId,
-      items: [{ ...cartItemDTO, subTotalPrice }],
-      totalPrice,
-    });
-    return newCart;
-  }
-
   async getCart(userId: string): Promise<CartDocument> {
     const cart = await this.cartModel.findOne({ userId });
+
     return cart;
+  }
+
+  async createCart(userId: string, itemDTO: CartItemDto): Promise<Cart> {
+    const newCart = await this.cartModel.create({
+      userId,
+      items: [{ ...itemDTO }],
+    });
+    return newCart;
   }
 
   private recalculateCart(cart: CartDocument) {
@@ -34,8 +29,9 @@ export class CartService {
     });
   }
 
-  async addItemToCart(userId: string, cartItemDTO: CartItemDTO): Promise<Cart> {
-    const { productId, quantity, price } = cartItemDTO;
+  async addItemToCart(userId: string, itemDTO: CartItemDto): Promise<Cart> {
+    const { productId, quantity, price } = itemDTO;
+
     const subTotalPrice = quantity * price;
 
     const cart = await this.getCart(userId);
@@ -55,22 +51,14 @@ export class CartService {
         return cart.save();
       } else {
         cart.items.push({
-          ...cartItemDTO,
-          name: '',
-          description: '',
-          imageLinks: [],
-          subTotalPrice: 0,
+          ...itemDTO,
+          subTotalPrice,
         });
         this.recalculateCart(cart);
         return cart.save();
       }
     } else {
-      const newCart = await this.createCart(
-        userId,
-        cartItemDTO,
-        subTotalPrice,
-        price,
-      );
+      const newCart = await this.createCart(userId, itemDTO);
       return newCart;
     }
   }

@@ -9,22 +9,22 @@ import {
   Request,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
-import { CartItemDTO } from './dto/cart-item.dto';
+import { CartItemDto } from './dto/cart-item.dto';
 
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Get('/:id')
-  async get(@Param('id') userId: string) {
-    const cart = await this.cartService.getCart(userId);
+  async get(@Param('id') id: string) {
+    const cart = await this.cartService.getCart(id);
     return cart;
   }
 
   @Post('/')
-  async addItemToCart(@Request() req, @Body() cartItemDTO: CartItemDTO) {
-    const userId = req.user.userId;
-    const cart = await this.cartService.addItemToCart(userId, cartItemDTO);
+  async addItemToCart(@Body() body: CartItemDto) {
+    const userId = '6458f0cfb2748e9a47cb72ae';
+    const cart = await this.cartService.addItemToCart(userId, body);
     return cart;
   }
 

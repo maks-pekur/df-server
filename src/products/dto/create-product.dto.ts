@@ -8,6 +8,8 @@ import {
 } from 'class-validator';
 
 export class CreateProductDto {
+  _id: string;
+
   @IsString()
   @IsOptional()
   code: string;

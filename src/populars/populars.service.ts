@@ -14,14 +14,14 @@ export class PopularsService {
   ) {}
 
   async create(createPopularDto: CreatePopularDto) {
-    const newPopular = new this.popularModel(createPopularDto);
+    const newPopular = new this.popularModel();
 
-    const product = await this.productsService.getProduct(
+    const product = await this.productsService.getOneProduct(
       createPopularDto.productId,
     );
 
     newPopular.name = product.name;
-    newPopular.productCategoryId = product.categoryId;
+    newPopular.categoryId = product.categoryId;
     newPopular.imageLinks = [...product.imageLinks];
     // newPopular.price = product.price;
 

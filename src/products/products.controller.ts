@@ -24,7 +24,7 @@ export class ProductsController {
 
   @Get('/')
   async getProducts(@Query('category') category: string) {
-    if (category.length) {
+    if (category) {
       const filteredProducts = await this.productService.getProductsByCategory(
         category,
       );
@@ -37,7 +37,7 @@ export class ProductsController {
 
   @Get('/:id')
   async getProduct(@Param('id') id: string) {
-    const product = await this.productService.getProduct(id);
+    const product = await this.productService.getOneProduct(id);
     if (!product) throw new NotFoundException('Product does not exist!');
     return product;
   }

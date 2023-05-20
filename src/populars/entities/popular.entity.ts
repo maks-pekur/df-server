@@ -13,7 +13,7 @@ export class Popular {
   productId: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
-  productCategoryId: Category;
+  categoryId: Category;
 
   @Prop([String])
   imageLinks: string[];

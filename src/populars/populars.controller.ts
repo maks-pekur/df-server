@@ -16,8 +16,9 @@ export class PopularsController {
   constructor(private readonly popularsService: PopularsService) {}
 
   @Post()
-  create(@Body() createPopularDto: CreatePopularDto) {
-    return this.popularsService.create(createPopularDto);
+  async create(@Body() createPopularDto: CreatePopularDto) {
+    const popular = await this.popularsService.create(createPopularDto);
+    return popular;
   }
 
   @Get()
