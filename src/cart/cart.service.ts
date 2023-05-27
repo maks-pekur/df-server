@@ -29,8 +29,8 @@ export class CartService {
     });
   }
 
-  async addItemToCart(userId: string, itemDTO: CartItemDto): Promise<Cart> {
-    const { productId, quantity, price } = itemDTO;
+  async addItemToCart(userId: string, body: CartItemDto): Promise<Cart> {
+    const { productId, quantity, price } = body;
 
     const subTotalPrice = quantity * price;
 
@@ -51,14 +51,14 @@ export class CartService {
         return cart.save();
       } else {
         cart.items.push({
-          ...itemDTO,
+          ...body,
           subTotalPrice,
         });
         this.recalculateCart(cart);
         return cart.save();
       }
     } else {
-      const newCart = await this.createCart(userId, itemDTO);
+      const newCart = await this.createCart(userId, body);
       return newCart;
     }
   }

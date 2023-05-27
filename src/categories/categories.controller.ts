@@ -36,12 +36,12 @@ export class CategoriesController {
     }
   }
 
-  @Get(':id')
+  @Get('/:id')
   findOne(@Param('id') id: string): Promise<Category> {
     return this.categoriesService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch('/:id')
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -49,7 +49,7 @@ export class CategoriesController {
     return this.categoriesService.update(id, updateCategoryDto);
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   remove(@Param('id') id: string): Promise<Category> {
     return this.categoriesService.remove(id);
   }

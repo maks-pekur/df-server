@@ -11,24 +11,24 @@ export class CategoriesService {
     @InjectModel(Category.name) private categoryModel: Model<Category>,
   ) {}
 
-  create(createCategoryDto: CreateCategoryDto) {
+  async create(createCategoryDto: CreateCategoryDto) {
     const newCategory = new this.categoryModel(createCategoryDto);
     return newCategory.save();
   }
 
-  findAll() {
+  async findAll() {
     return this.categoryModel.find().exec();
   }
 
-  findOne(id: string) {
+  async findOne(id: string) {
     return this.categoryModel.findById(id);
   }
 
-  update(id: string, updateCategoryDto: UpdateCategoryDto) {
-    return this.categoryModel.findByIdAndUpdate(id);
+  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
+    return this.categoryModel.findByIdAndUpdate(id, updateCategoryDto);
   }
 
-  remove(id: string) {
+  async remove(id: string) {
     return this.categoryModel.findByIdAndRemove(id);
   }
 }
