@@ -10,47 +10,41 @@ import {
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { Category } from './entities/category.entity';
 
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto): Promise<Category> {
-    try {
-      const category = this.categoriesService.create(createCategoryDto);
-      return category;
-    } catch (error) {
-      throw new Error(error);
-    }
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    const category = this.categoriesService.create(createCategoryDto);
+    return category;
   }
 
   @Get()
-  findAll(): Promise<Category[]> {
-    try {
-      const categories = this.categoriesService.findAll();
-      return categories;
-    } catch (error) {
-      throw new Error(error);
-    }
+  findAll() {
+    const categories = this.categoriesService.findAll();
+    return categories;
   }
 
   @Get('/:id')
-  findOne(@Param('id') id: string): Promise<Category> {
-    return this.categoriesService.findOne(id);
+  findOne(@Param('id') id: string) {
+    const category = this.categoriesService.findOne(id);
+    return category;
   }
 
   @Patch('/:id')
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
-  ): Promise<Category> {
-    return this.categoriesService.update(id, updateCategoryDto);
+  ) {
+    const category = this.categoriesService.update(id, updateCategoryDto);
+    return category;
   }
 
   @Delete('/:id')
-  remove(@Param('id') id: string): Promise<Category> {
-    return this.categoriesService.remove(id);
+  remove(@Param('id') id: string) {
+    const category = this.categoriesService.remove(id);
+    return category;
   }
 }

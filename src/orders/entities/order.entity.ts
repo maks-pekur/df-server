@@ -1,5 +1,3 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-
 export enum paymentStatus {
   pending = 'pending',
   paid = 'paid',
@@ -12,28 +10,16 @@ export enum orderStatus {
 }
 
 export class OrderedItems {
-  @Prop({ required: true })
   productId: string;
-
-  @Prop({ required: true })
   quantity: number;
-
-  @Prop({ required: true })
   price: number;
-
-  @Prop({ required: true })
   lifetime: boolean;
-
-  @Prop({ required: true })
   name: string;
 }
 
-@Schema({ timestamps: true })
 export class Order {
-  @Prop({ required: true })
   userId: string;
-
-  @Prop({ required: true, type: Object })
+  orderType: string;
   customerAddress: {
     line1: string;
     line2: string;
@@ -42,14 +28,8 @@ export class Order {
     country: string;
     postal_code: string;
   };
-
-  @Prop({ required: true })
   customerPhoneNumber: string;
-
-  @Prop({ required: true })
   orderedItems: OrderedItems[];
-
-  @Prop({ required: true, type: Object })
   paymentInfo: {
     paymentMethod: string;
     paymentStatus: paymentStatus;
@@ -57,15 +37,7 @@ export class Order {
     paymentDate: Date;
     paymentIntentId: string;
   };
-
-  @Prop({ default: orderStatus.pending })
   orderStatus: orderStatus;
-
-  @Prop({ default: false })
   isOrderDelivered: boolean;
-
-  @Prop({ default: null })
   checkoutSessionId: string;
 }
-
-export const OrderSchema = SchemaFactory.createForClass(Order);

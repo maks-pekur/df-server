@@ -1,1 +1,5 @@
-export class CreateStoryDto {}
+export class CreateStoryDto {
+  title: string;
+  imageUrl: string;
+  isOpen: boolean;
+}

@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Product, ProductSchema } from './entities/product.entity';
+import { ConfigModule } from '@nestjs/config';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
-  ],
+  imports: [ConfigModule],
   controllers: [ProductsController],
-  providers: [ProductsService],
+  providers: [ProductsService, FirebaseService],
   exports: [ProductsService],
 })
 export class ProductsModule {}

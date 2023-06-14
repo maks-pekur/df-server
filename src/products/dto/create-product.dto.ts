@@ -1,6 +1,5 @@
 import {
   IsArray,
-  IsBoolean,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -8,12 +7,6 @@ import {
 } from 'class-validator';
 
 export class CreateProductDto {
-  _id: string;
-
-  @IsString()
-  @IsOptional()
-  code: string;
-
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -23,15 +16,10 @@ export class CreateProductDto {
   description: string;
 
   @IsNumber()
-  @IsOptional()
   price: number;
 
-  @IsArray()
   @IsNotEmpty()
-  imageLinks: string[];
-
-  @IsArray()
-  sizes: object[];
+  imageUrl: string;
 
   @IsArray()
   @IsOptional()
@@ -53,12 +41,9 @@ export class CreateProductDto {
   @IsOptional()
   energyAmount: number;
 
-  @IsBoolean()
-  isDeleted: boolean;
-
   @IsOptional()
   @IsArray()
-  tags: string[];
+  tags: string;
 
   @IsNumber()
   @IsOptional()
@@ -70,25 +55,5 @@ export class CreateProductDto {
 
   @IsString()
   @IsOptional()
-  type: string;
-
-  @IsString()
-  @IsOptional()
   measureUnit: string;
-
-  @IsString()
-  @IsOptional()
-  seoDescription: string;
-
-  @IsString()
-  @IsOptional()
-  seoTitle: string;
-
-  @IsString()
-  @IsOptional()
-  seoText: string;
-
-  @IsString()
-  @IsOptional()
-  seoKeywords: string;
 }

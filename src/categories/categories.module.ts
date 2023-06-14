@@ -1,16 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
-import { Category, CategorySchema } from './entities/category.entity';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: Category.name, schema: CategorySchema },
-    ]),
-  ],
+  imports: [ConfigModule],
   controllers: [CategoriesController],
-  providers: [CategoriesService],
+  providers: [CategoriesService, FirebaseService],
 })
 export class CategoriesModule {}

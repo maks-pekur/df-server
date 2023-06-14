@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  NotFoundException,
-  Param,
-  Post,
-  Request,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CartItemDto } from './dto/cart-item.dto';
 
@@ -17,29 +8,27 @@ export class CartController {
 
   @Get('/:id')
   async get(@Param('id') id: string) {
-    const cart = await this.cartService.getCart(id);
+    const cart = await this.cartService.getCartByUserId(id);
     return cart;
   }
 
   @Post('/')
   async addItemToCart(@Body() body: CartItemDto) {
     const userId = '6458f0cfb2748e9a47cb72ae';
-    const cart = await this.cartService.addItemToCart(userId, body);
-    return cart;
+    await this.cartService.addItemToCart(userId, body);
+    return { message: 'Product successfully added to cart' };
   }
 
   @Delete('/')
-  async removeItemFromCart(@Request() req, @Body() { productId }) {
-    const userId = req.user.userId;
-    const cart = await this.cartService.removeItemFromCart(userId, productId);
-    if (!cart) throw new NotFoundException('Item does not exist');
-    return cart;
+  async removeItemFromCart(@Body('productId') productId: string) {
+    const userId = '6458f0cfb2748e9a47cb72ae';
+    await this.cartService.removeItemFromCart(userId, productId);
+    return { message: 'Item successfully removed from cart' };
   }
 
   @Delete('/:id')
   async deleteCart(@Param('id') userId: string) {
-    const cart = await this.cartService.deleteCart(userId);
-    if (!cart) throw new NotFoundException('Cart does not exist');
-    return cart;
+    await this.cartService.deleteCart(userId);
+    return { message: 'Cart successfully deleted' };
   }
 }

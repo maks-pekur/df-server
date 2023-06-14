@@ -1,31 +1,76 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  addDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+} from 'firebase/firestore';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
-import { Story } from './entities/story.entity';
 
 @Injectable()
 export class StoriesService {
-  constructor(@InjectModel(Story.name) private storyModel: Model<Story>) {}
+  constructor(private firebaseService: FirebaseService) {}
 
-  create(createStoryDto: CreateStoryDto) {
-    return 'This action adds a new story';
+  async create(createStoryDto: CreateStoryDto) {
+    try {
+      const story = await addDoc(
+        this.firebaseService.storiesCollection,
+        createStoryDto,
+      );
+      return story;
+    } catch (error) {
+      throw new NotFoundException('Story does not create');
+    }
   }
 
-  findAll() {
-    return this.storyModel.find().exec();
+  async findAll() {
+    try {
+      const data = await getDocs(this.firebaseService.storiesCollection);
+      const stories = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      return stories;
+    } catch (error) {
+      throw new NotFoundException('Stories not found');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} story`;
+  async findOne(id: string) {
+    try {
+      const story = await getDoc(
+        doc(this.firebaseService.storiesCollection, id),
+      );
+      return { ...story.data(), id: story.id };
+    } catch (error) {
+      throw new NotFoundException('Story not found');
+    }
   }
 
-  update(id: number, updateStoryDto: UpdateStoryDto) {
-    return `This action updates a #${id} story`;
+  async update(id: string, updateStoryDto: UpdateStoryDto) {
+    try {
+      const story = await setDoc(
+        doc(this.firebaseService.storiesCollection, id),
+        updateStoryDto,
+      );
+      return story;
+    } catch (error) {
+      throw new NotFoundException('Category does not update');
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} story`;
+  async remove(id: string) {
+    try {
+      const story = await deleteDoc(
+        doc(this.firebaseService.storiesCollection, id),
+      );
+      return story;
+    } catch (error) {
+      throw new NotFoundException('Category does not remove');
+    }
   }
 }

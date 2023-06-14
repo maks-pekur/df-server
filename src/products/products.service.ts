@@ -1,63 +1,73 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  addDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+} from 'firebase/firestore';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductsService {
-  constructor(
-    @InjectModel(Product.name) private productModel: Model<Product>,
-  ) {}
+  constructor(private firebaseService: FirebaseService) {}
 
-  async addProduct(createProductDto: CreateProductDto): Promise<Product> {
+  async addProduct(createProductDto: CreateProductDto): Promise<void> {
     try {
-      const newProduct = new this.productModel(createProductDto);
-      return newProduct.save();
+      await addDoc(this.firebaseService.productsCollection, createProductDto);
     } catch (error) {
-      throw error;
+      throw new NotFoundException('Product does not create');
     }
   }
 
-  async getAllProducts(): Promise<Product[]> {
+  async getAllProducts(): Promise<any> {
     try {
-      return this.productModel.find().exec();
+      const data = await getDocs(this.firebaseService.productsCollection);
+      const products = data.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      return products;
     } catch (error) {
-      throw error;
+      throw new NotFoundException('Products not found');
     }
   }
 
-  async getOneProduct(id: string): Promise<Product> {
+  async getOneProduct(id: string): Promise<any> {
     try {
-      return this.productModel.findById(id);
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getProductsByCategory(category: string): Promise<Product[]> {
-    let products = await this.getAllProducts();
-
-    if (category) {
-      products = products.filter(
-        (product) => product.categoryId.toString() === category,
+      const product = await getDoc(
+        doc(this.firebaseService.productsCollection, id),
       );
-    }
-
-    return products;
-  }
-
-  async updateProduct(id: string, updateProductDto: UpdateProductDto) {
-    try {
-      return this.productModel.findByIdAndUpdate({ _id: id }, updateProductDto);
+      if (!product) return null;
+      return product.data();
     } catch (error) {
-      throw error;
+      throw new NotFoundException('Product not found');
     }
   }
 
-  async deleteProduct(id: string): Promise<any> {
-    const deletedProduct = await this.productModel.findByIdAndRemove(id);
-    return deletedProduct;
+  async updateProduct(
+    id: string,
+    updateProductDto: UpdateProductDto,
+  ): Promise<void> {
+    try {
+      const docRef = await setDoc(
+        doc(this.firebaseService.productsCollection, id),
+        updateProductDto,
+      );
+      return docRef;
+    } catch (error) {
+      throw new NotFoundException('Product does not update');
+    }
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    try {
+      const product = await deleteDoc(
+        doc(this.firebaseService.productsCollection, id),
+      );
+      return product;
+    } catch (error) {
+      throw new NotFoundException('Product does not remove');
+    }
   }
 }

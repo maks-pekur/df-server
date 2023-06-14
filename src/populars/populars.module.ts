@@ -1,16 +1,13 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { ProductsModule } from 'src/products/products.module';
-import { Popular, PopularSchema } from './entities/popular.entity';
 import { PopularsController } from './populars.controller';
 import { PopularsService } from './populars.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Popular.name, schema: PopularSchema }]),
-    ProductsModule,
-  ],
+  imports: [ProductsModule, ConfigModule],
   controllers: [PopularsController],
-  providers: [PopularsService],
+  providers: [PopularsService, FirebaseService],
 })
 export class PopularsModule {}

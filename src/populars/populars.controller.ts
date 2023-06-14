@@ -1,14 +1,5 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CreatePopularDto } from './dto/create-popular.dto';
-import { UpdatePopularDto } from './dto/update-popular.dto';
 import { PopularsService } from './populars.service';
 
 @Controller('populars')
@@ -22,22 +13,19 @@ export class PopularsController {
   }
 
   @Get()
-  findAll() {
-    return this.popularsService.findAll();
+  async findAll() {
+    const popularProducts = await this.popularsService.findAll();
+    return popularProducts;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.popularsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePopularDto: UpdatePopularDto) {
-    return this.popularsService.update(+id, updatePopularDto);
+  async findOne(@Param('id') id: string) {
+    const popularProduct = await this.popularsService.findOne(id);
+    return popularProduct;
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.popularsService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return this.popularsService.remove(id);
   }
 }

@@ -1,6 +1,5 @@
 export class CartItemDto {
-  productId: string;
-  quantity: number;
-  price: number;
-  subTotalPrice: number;
+  readonly productId: string;
+  readonly quantity: number;
+  readonly subTotalPrice: number;
 }

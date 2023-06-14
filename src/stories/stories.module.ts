@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Story, StorySchema } from './entities/story.entity';
+import { ConfigModule } from '@nestjs/config';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { StoriesController } from './stories.controller';
 import { StoriesService } from './stories.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Story.name, schema: StorySchema }]),
-  ],
+  imports: [ConfigModule],
   controllers: [StoriesController],
-  providers: [StoriesService],
+  providers: [StoriesService, FirebaseService],
 })
 export class StoriesModule {}

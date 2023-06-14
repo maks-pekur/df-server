@@ -3,11 +3,9 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
+  Patch,
   Post,
-  Put,
-  Query,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductsService } from './products.service';
@@ -23,26 +21,18 @@ export class ProductsController {
   }
 
   @Get('/')
-  async getProducts(@Query('category') category: string) {
-    if (category) {
-      const filteredProducts = await this.productService.getProductsByCategory(
-        category,
-      );
-      return filteredProducts;
-    } else {
-      const allProducts = await this.productService.getAllProducts();
-      return allProducts;
-    }
+  async getProducts() {
+    const allProducts = await this.productService.getAllProducts();
+    return allProducts;
   }
 
   @Get('/:id')
   async getProduct(@Param('id') id: string) {
     const product = await this.productService.getOneProduct(id);
-    if (!product) throw new NotFoundException('Product does not exist!');
     return product;
   }
 
-  @Put('/:id')
+  @Patch('/:id')
   async updateProduct(
     @Param('id') id: string,
     @Body() createProductDTO: CreateProductDto,
@@ -51,14 +41,13 @@ export class ProductsController {
       id,
       createProductDTO,
     );
-    if (!product) throw new NotFoundException('Product does not exist!');
+
     return product;
   }
 
   @Delete('/:id')
   async deleteProduct(@Param('id') id: string) {
     const product = await this.productService.deleteProduct(id);
-    if (!product) throw new NotFoundException('Product does not exist');
     return product;
   }
 }
