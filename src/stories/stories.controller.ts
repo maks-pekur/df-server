@@ -21,22 +21,29 @@ export class StoriesController {
   }
 
   @Get()
-  findAll() {
-    return this.storiesService.findAll();
+  async findAll() {
+    const stories = await this.storiesService.findAll();
+    return stories;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.storiesService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const story = await this.storiesService.findOne(id);
+    return story;
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStoryDto: UpdateStoryDto) {
-    return this.storiesService.update(id, updateStoryDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateStoryDto: UpdateStoryDto,
+  ) {
+    await this.storiesService.update(id, updateStoryDto);
+    return { message: 'Story successfully updated' };
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.storiesService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.storiesService.remove(id);
+    return { message: 'Story successfully removed' };
   }
 }

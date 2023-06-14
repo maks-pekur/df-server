@@ -23,7 +23,7 @@ export class CreateProductDto {
 
   @IsArray()
   @IsOptional()
-  modifiers: string[];
+  extraIngredients: string;
 
   @IsNumber()
   @IsOptional()

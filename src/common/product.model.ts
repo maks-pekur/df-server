@@ -1,16 +1,18 @@
+import { DocumentReference } from 'firebase/firestore';
+
 export class Product {
-  id: string;
+  id?: string;
   name: string;
   description: string;
   imageUrl: string;
-  modifiers: string;
-  fatAmount: number;
-  proteinsAmount: number;
-  carbohydratesAmount: number;
-  energyAmount: number;
+  extraIngredients: string;
   price: number;
   tags: string;
   weight: number;
-  categoryId: string;
+  categoryId: DocumentReference;
   measureUnit: string;
+  carbohydratesAmount: number;
+  fatAmount: number;
+  energyAmount: number;
+  proteinsAmount: number;
 }

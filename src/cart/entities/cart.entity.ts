@@ -12,6 +12,8 @@ export class Cart {
   docRef: DocumentReference<DocumentData>;
   items: any[];
   totalPrice: number;
+  deliveryCost: number;
+  coinCount: number;
   createdAt: any;
   updatedAt: any;
 }

@@ -8,5 +8,6 @@ import { CategoriesService } from './categories.service';
   imports: [ConfigModule],
   controllers: [CategoriesController],
   providers: [CategoriesService, FirebaseService],
+  exports: [CategoriesService],
 })
 export class CategoriesModule {}

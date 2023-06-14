@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
+  DocumentData,
+  DocumentReference,
   addDoc,
   deleteDoc,
   doc,
@@ -15,7 +17,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoriesService {
   constructor(private firebaseService: FirebaseService) {}
 
-  async create(createCategoryDto: CreateCategoryDto) {
+  async createCategory(createCategoryDto: CreateCategoryDto) {
     try {
       const category = await addDoc(
         this.firebaseService.categoriesCollection,
@@ -27,7 +29,7 @@ export class CategoriesService {
     }
   }
 
-  async findAll() {
+  async getCategories() {
     try {
       const data = await getDocs(this.firebaseService.categoriesCollection);
       const categories = data.docs.map((doc) => ({
@@ -40,18 +42,16 @@ export class CategoriesService {
     }
   }
 
-  async findOne(id: string) {
-    try {
-      const category = await getDoc(
-        doc(this.firebaseService.categoriesCollection, id),
-      );
-      return { ...category.data(), id: category.id };
-    } catch (error) {
+  async getCategory(id: string): Promise<DocumentReference<DocumentData>> {
+    const categoryRef = doc(this.firebaseService.categoriesCollection, id);
+    const categorySnapshot = await getDoc(categoryRef);
+    if (!categorySnapshot.exists()) {
       throw new NotFoundException('Category not found');
     }
+    return categoryRef;
   }
 
-  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
+  async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
     try {
       const category = await setDoc(
         doc(this.firebaseService.categoriesCollection, id),
@@ -63,7 +63,7 @@ export class CategoriesService {
     }
   }
 
-  async remove(id: string) {
+  async removeCategory(id: string) {
     try {
       const category = await deleteDoc(
         doc(this.firebaseService.categoriesCollection, id),

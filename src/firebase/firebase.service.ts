@@ -8,6 +8,7 @@ import {
   collection,
   getFirestore,
 } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { Config } from 'src/common/config.model';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class FirebaseService {
   public app: FirebaseApp;
   public auth: Auth;
   public db: Firestore;
+  public storage: any;
 
   // Collections
   public usersCollection: CollectionReference;
@@ -23,6 +25,9 @@ export class FirebaseService {
   public categoriesCollection: CollectionReference;
   public cartCollection: CollectionReference;
   public popularProductCollection: CollectionReference;
+  public restaurantsCollection: CollectionReference;
+  public ingredientsCollection: CollectionReference;
+  public modifiersCollection: CollectionReference;
 
   constructor(private configService: ConfigService<Config>) {
     this.app = initializeApp({
@@ -37,6 +42,7 @@ export class FirebaseService {
 
     this.auth = getAuth(this.app);
     this.db = getFirestore(this.app);
+    this.storage = getStorage(this.app);
 
     this._createCollections();
   }
@@ -48,5 +54,8 @@ export class FirebaseService {
     this.categoriesCollection = collection(this.db, 'categories');
     this.cartCollection = collection(this.db, 'cart');
     this.popularProductCollection = collection(this.db, 'populars');
+    this.restaurantsCollection = collection(this.db, 'restaurants');
+    this.ingredientsCollection = collection(this.db, 'ingredients');
+    this.modifiersCollection = collection(this.db, 'modifiers');
   }
 }

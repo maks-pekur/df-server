@@ -31,8 +31,8 @@ export class StoriesService {
     try {
       const data = await getDocs(this.firebaseService.storiesCollection);
       const stories = data.docs.map((doc) => ({
-        ...doc.data(),
         id: doc.id,
+        ...doc.data(),
       }));
       return stories;
     } catch (error) {
