@@ -23,7 +23,7 @@ export class CreateProductDto {
 
   @IsArray()
   @IsOptional()
-  extraIngredients: string;
+  extraIngredients: string[];
 
   @IsNumber()
   @IsOptional()
@@ -43,13 +43,12 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsArray()
-  tags: string;
+  tags: string[];
 
   @IsNumber()
   @IsOptional()
   weight: number;
 
-  @IsString()
   @IsNotEmpty()
   categoryId: string;
 

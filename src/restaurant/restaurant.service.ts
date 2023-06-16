@@ -5,11 +5,12 @@ import {
   doc,
   getDoc,
   getDocs,
-  setDoc,
+  serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
-import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import { Restaurant } from './entities/restaurant.entity';
 
 @Injectable()
 export class RestaurantService {
@@ -17,31 +18,51 @@ export class RestaurantService {
 
   async createRestaurant(
     createRestaurantDto: CreateRestaurantDto,
-  ): Promise<void> {
+  ): Promise<Restaurant> {
     try {
-      await addDoc(
+      const currentTime = serverTimestamp();
+      const newRestaurant = {
+        ...createRestaurantDto,
+        createdAt: currentTime,
+        updatedAt: currentTime,
+      };
+      const docRef = await addDoc(
         this.firebaseService.restaurantsCollection,
-        createRestaurantDto,
+        newRestaurant,
       );
+      const createdRestaurant: Restaurant = {
+        id: docRef.id,
+        ...newRestaurant,
+      };
+      return createdRestaurant;
     } catch (error) {
       throw new NotFoundException('Restaurant does not create');
     }
   }
 
-  async getRestaurants(): Promise<any> {
+  async getRestaurants(): Promise<Restaurant[]> {
     try {
-      const data = await getDocs(this.firebaseService.restaurantsCollection);
-      const restaurants = data.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const snapshot = await getDocs(
+        this.firebaseService.restaurantsCollection,
+      );
+      const restaurants: Restaurant[] = [];
+      snapshot.forEach((doc) => {
+        const restaurantData = doc.data();
+        const restaurant: Restaurant = {
+          id: doc.id,
+          name: restaurantData.name,
+          createdAt: restaurantData.createdAt,
+          updatedAt: restaurantData.updatedAt,
+        };
+        restaurants.push(restaurant);
+      });
       return restaurants;
     } catch (error) {
-      throw new NotFoundException('Restaurants not found');
+      throw new NotFoundException('Failed to fetch restaurants');
     }
   }
 
-  async getRestaurant(id: string): Promise<any> {
+  async getRestaurant(id: string): Promise<Restaurant> {
     try {
       const restaurantDoc = await getDoc(
         doc(this.firebaseService.restaurantsCollection, id),
@@ -49,22 +70,48 @@ export class RestaurantService {
       if (!restaurantDoc.exists()) {
         return null;
       }
-      return restaurantDoc.data();
+      const restaurantData = restaurantDoc.data();
+      const restaurant: Restaurant = {
+        id: restaurantDoc.id,
+        name: restaurantData.name,
+        createdAt: restaurantData.createdAt,
+        updatedAt: restaurantData.updatedAt,
+      };
+      return restaurant;
     } catch (error) {
       throw new NotFoundException('Restaurant not found');
     }
   }
 
-  async updateRestaurant(
-    id: string,
-    updateRestaurantDto: UpdateRestaurantDto,
-  ): Promise<void> {
+  async updateRestaurant(id: string, body): Promise<Restaurant> {
     try {
-      const docRef = await setDoc(
-        doc(this.firebaseService.restaurantsCollection, id),
-        updateRestaurantDto,
-      );
-      return docRef;
+      const restaurantRef = doc(this.firebaseService.restaurantsCollection, id);
+      const restaurantSnapshot = await getDoc(restaurantRef);
+
+      if (!restaurantSnapshot.exists()) {
+        throw new NotFoundException('Restaurant not found');
+      }
+
+      const restaurantData = restaurantSnapshot.data();
+      const updatedData = {
+        ...body,
+        updatedAt: serverTimestamp(), // Update the updatedAt field
+      };
+
+      await updateDoc(restaurantRef, updatedData);
+
+      const updatedRestaurantSnapshot = await getDoc(restaurantRef);
+      const updatedRestaurantData = updatedRestaurantSnapshot.data();
+
+      const updatedRestaurant: Restaurant = {
+        id: updatedRestaurantSnapshot.id,
+        name: restaurantData.name,
+        createdAt: restaurantData.createdAt,
+        updatedAt: updatedRestaurantData.updatedAt,
+        ...updatedRestaurantData,
+      };
+
+      return updatedRestaurant;
     } catch (error) {
       throw new NotFoundException('Restaurant does not update');
     }

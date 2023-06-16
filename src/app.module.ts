@@ -4,16 +4,17 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
+import { CustomersModule } from './customers/customers.module';
 import { FirebaseService } from './firebase/firebase.service';
+import { IngredientsModule } from './ingredients/ingredients.module';
+import { ModifiersModule } from './modifiers/modifiers.module';
 import { OrdersModule } from './orders/orders.module';
-import { PaymentModule } from './payment/payment.module';
+import { PaymentsModule } from './payment/payments.module';
 import { PopularsModule } from './populars/populars.module';
 import { ProductsModule } from './products/products.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
-import { StoriesModule } from './stories/stories.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
-import { IngredientsModule } from './ingredients/ingredients.module';
-import { ModifiersModule } from './modifiers/modifiers.module';
+import { StoriesModule } from './stories/stories.module';
 
 @Module({
   imports: [
@@ -24,11 +25,12 @@ import { ModifiersModule } from './modifiers/modifiers.module';
     PopularsModule,
     StoriesModule,
     OrdersModule,
-    PaymentModule,
+    PaymentsModule,
     PromoCodesModule,
     RestaurantModule,
     IngredientsModule,
     ModifiersModule,
+    CustomersModule,
   ],
   controllers: [AppController],
   providers: [AppService, FirebaseService],

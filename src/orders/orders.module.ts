@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { CategoriesModule } from 'src/categories/categories.module';
+import { CustomersService } from 'src/customers/customers.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { ProductsModule } from 'src/products/products.module';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, CategoriesModule],
   controllers: [OrdersController],
-  providers: [OrdersService, ProductsModule, FirebaseService],
+  providers: [OrdersService, FirebaseService, CustomersService],
 })
 export class OrdersModule {}

@@ -1,39 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { addDoc, serverTimestamp } from 'firebase/firestore';
+import { CustomersService } from 'src/customers/customers.service';
+import { FirebaseService } from 'src/firebase/firebase.service';
+import { Order } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
-  constructor() {}
+  constructor(
+    private firebaseService: FirebaseService,
+    private customersService: CustomersService,
+  ) {}
 
-  // create(createOrderDto: CreateOrderDto) {
-  //   return 'This action adds a new order';
-  // }
+  async createOrder(orderData: any): Promise<Order> {
+    const orderNumber = this.generateOrderNumber();
 
-  // async findAllByUserId(userId: string) {
-  //   const orders = await this.orderModel.findOne({ userId });
+    const { customerId } = orderData;
+    const customer = await this.customersService.getCustomer(customerId);
 
-  //   if (!orders) {
-  //     throw new NotFoundException(`This user doesn't have any orders`);
-  //   }
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    } else {
+      const currentTime = serverTimestamp();
+      const newOrder: Order = {
+        orderNumber,
+        customerName: customer.name,
+        customerPhoneNumber: customer.phoneNumber,
+        createdAt: currentTime,
+        updatedAt: currentTime,
+        ...orderData,
+      };
 
-  //   return orders;
-  // }
+      await addDoc(this.firebaseService.ordersCollection, newOrder);
+      return newOrder;
+    }
+  }
 
-  // async findOne(id: string) {
-  //   const order = await this.orderModel.findById(id);
-
-  //   if (!order) {
-  //     throw new NotFoundException(`Order under this id doesn't exist`);
-  //   }
-
-  //   return order;
-  // }
-
-  // update(id: string, updateOrderDto: UpdateOrderDto) {
-  //   return `This action updates a #${id} order`;
-  // }
-
-  // async remove(id: string) {
-  //   const order = await this.orderModel.findByIdAndRemove(id);
-  //   return order;
-  // }
+  private generateOrderNumber(): string {
+    const date = new Date();
+    const random = Math.floor(Math.random() * 1000);
+    const orderNumber = `${date.getFullYear()}${
+      date.getMonth() + 1
+    }${date.getDate()}-${random}`;
+    return orderNumber;
+  }
 }

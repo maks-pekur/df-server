@@ -1,43 +1,42 @@
-export enum paymentStatus {
-  pending = 'pending',
-  paid = 'paid',
-  failed = 'failed',
-}
-
 export enum orderStatus {
   pending = 'pending',
+  accepted = 'accepted',
+  preparing = 'preparing',
+  ready = 'ready',
+  delivered = 'delivered',
   completed = 'completed',
 }
 
+export enum orderType {
+  delivery = 'delivery',
+  takeaway = 'takeaway',
+  inside = 'inside',
+}
+
 export class OrderedItems {
-  productId: string;
+  name: string;
   quantity: number;
   price: number;
-  lifetime: boolean;
-  name: string;
+  subTotalPrice: number;
 }
 
 export class Order {
-  userId: string;
-  orderType: string;
+  orderNumber: string;
+  orderType: orderType;
+  customerId: string;
+  customerName: string;
+  customerPhoneNumber: string;
   customerAddress: {
-    line1: string;
-    line2: string;
+    street: string;
+    build: number;
+    local: string;
     city: string;
     state: string;
     country: string;
     postal_code: string;
   };
-  customerPhoneNumber: string;
   orderedItems: OrderedItems[];
-  paymentInfo: {
-    paymentMethod: string;
-    paymentStatus: paymentStatus;
-    paymentAmount: number;
-    paymentDate: Date;
-    paymentIntentId: string;
-  };
   orderStatus: orderStatus;
-  isOrderDelivered: boolean;
-  checkoutSessionId: string;
+  createdAt: any;
+  updatedAt: any;
 }

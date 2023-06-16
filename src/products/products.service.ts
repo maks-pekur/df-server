@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
+  DocumentData,
+  DocumentSnapshot,
   addDoc,
   deleteDoc,
   doc,
@@ -26,7 +28,7 @@ export class ProductsService {
   async addProduct(
     file: Express.Multer.File,
     createProductDto: CreateProductDto,
-  ): Promise<void> {
+  ): Promise<Product> {
     try {
       const isValidImage = imageValidation(file.mimetype);
       if (!isValidImage) {
@@ -35,15 +37,30 @@ export class ProductsService {
       const imageUrl = await this.uploadImage(file);
 
       const { categoryId } = createProductDto;
-      const categoryRef = await this.categoriesService.getCategory(categoryId);
+      const category = await this.categoriesService.getCategory(categoryId);
 
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
       const productData = {
         imageUrl,
-        categoryId: categoryRef,
+        categoryId: category.docRef,
         ...createProductDto,
       };
 
-      await addDoc(this.firebaseService.productsCollection, productData);
+      const productRef = await addDoc(
+        this.firebaseService.productsCollection,
+        productData,
+      );
+      const productSnapshot = await getDoc(productRef);
+      const product: Product = {
+        id: productSnapshot.id,
+        imageUrl: productData.imageUrl,
+        categoryId: productData.categoryId,
+        ...createProductDto,
+      };
+
+      return product;
     } catch (error) {
       throw new NotFoundException('Product does not create');
     }
@@ -86,17 +103,18 @@ export class ProductsService {
     }
   }
 
-  async getOneProduct(id: string): Promise<Product> {
+  async getOneProduct(id: string): Promise<Product | null> {
     try {
-      const productDoc = await getDoc(
-        doc(this.firebaseService.productsCollection, id),
+      const productDoc = doc(this.firebaseService.productsCollection, id);
+      const productSnapshot: DocumentSnapshot<DocumentData> = await getDoc(
+        productDoc,
       );
-      if (!productDoc.exists()) {
-        return null;
-      }
-      return productDoc.data() as Product;
+      const productData: Product | undefined = productSnapshot.data() as
+        | Product
+        | undefined;
+      return productData ?? null;
     } catch (error) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Customer not found');
     }
   }
 
@@ -110,7 +128,9 @@ export class ProductsService {
       const categoryRef = await this.categoriesService.getCategory(categoryId);
 
       const productDoc = doc(this.firebaseService.productsCollection, id);
-      const productSnapshot = await getDoc(productDoc);
+      const productSnapshot: DocumentSnapshot<DocumentData> = await getDoc(
+        productDoc,
+      );
       const productData = productSnapshot.data();
 
       if (file) {

@@ -8,7 +8,7 @@ export class CartItem {
 
 export class Cart {
   id: string;
-  userId: string;
+  customerId: string;
   docRef: DocumentReference<DocumentData>;
   items: any[];
   totalPrice: number;

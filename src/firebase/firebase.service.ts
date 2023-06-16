@@ -19,7 +19,7 @@ export class FirebaseService {
   public storage: any;
 
   // Collections
-  public usersCollection: CollectionReference;
+  public customersCollection: CollectionReference;
   public productsCollection: CollectionReference;
   public storiesCollection: CollectionReference;
   public categoriesCollection: CollectionReference;
@@ -28,6 +28,7 @@ export class FirebaseService {
   public restaurantsCollection: CollectionReference;
   public ingredientsCollection: CollectionReference;
   public modifiersCollection: CollectionReference;
+  public ordersCollection: CollectionReference;
 
   constructor(private configService: ConfigService<Config>) {
     this.app = initializeApp({
@@ -48,7 +49,7 @@ export class FirebaseService {
   }
 
   private _createCollections() {
-    this.usersCollection = collection(this.db, 'users');
+    this.customersCollection = collection(this.db, 'customers');
     this.productsCollection = collection(this.db, 'products');
     this.storiesCollection = collection(this.db, 'stories');
     this.categoriesCollection = collection(this.db, 'categories');
@@ -57,5 +58,6 @@ export class FirebaseService {
     this.restaurantsCollection = collection(this.db, 'restaurants');
     this.ingredientsCollection = collection(this.db, 'ingredients');
     this.modifiersCollection = collection(this.db, 'modifiers');
+    this.ordersCollection = collection(this.db, 'orders');
   }
 }

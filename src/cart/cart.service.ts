@@ -22,11 +22,11 @@ export class CartService {
     private promoCodeService: PromoCodesService,
   ) {}
 
-  async getCartByUserId(userId: string): Promise<Cart | null> {
+  async getCartByCustomerId(customerId: string): Promise<Cart | null> {
     try {
       const cartQuery = query(
         this.firebaseService.cartCollection,
-        where('userId', '==', userId),
+        where('customerId', '==', customerId),
       );
       const cartSnapshot = await getDocs(cartQuery);
 
@@ -36,7 +36,7 @@ export class CartService {
         return {
           id: cartDoc.id,
           docRef: cartDoc.ref,
-          userId: cartData.userId,
+          customerId: cartData.customerId,
           totalPrice: cartData.totalPrice,
           items: cartData.items || [],
           deliveryCost: cartData.deliveryCost || 0,
@@ -52,9 +52,12 @@ export class CartService {
     }
   }
 
-  async getItemFromCart(userId: string, productId: string): Promise<number> {
+  async getItemFromCart(
+    customerId: string,
+    productId: string,
+  ): Promise<number> {
     try {
-      const cart = await this.getCartByUserId(userId);
+      const cart = await this.getCartByCustomerId(customerId);
 
       if (!cart) {
         throw new NotFoundException('Cart not found');
@@ -78,9 +81,9 @@ export class CartService {
 
   async addItemToCart(body: CartItemDto): Promise<void> {
     try {
-      const { productId, quantity, userId } = body;
+      const { productId, quantity, customerId } = body;
       const product = await this.productsService.getOneProduct(productId);
-      const cart = await this.getCartByUserId(userId);
+      const cart = await this.getCartByCustomerId(customerId);
 
       if (cart) {
         // Cart exists, update existing cart
@@ -98,6 +101,8 @@ export class CartService {
 
         if (!itemUpdated) {
           const newItem = {
+            name: product.name,
+            price: product.price,
             productId,
             quantity,
             subTotalPrice: product.price * quantity,
@@ -115,13 +120,15 @@ export class CartService {
         // Cart doesn't exist, create a new cart
         const newItem = {
           productId,
+          name: product.name,
+          price: product.price,
           quantity,
           subTotalPrice: product.price * quantity,
         };
 
         const currentTime = serverTimestamp();
         const newCartData: Omit<Cart, 'id' | 'docRef'> = {
-          userId,
+          customerId,
           items: [newItem],
           totalPrice: 0,
           coinCount: 0,
@@ -148,8 +155,8 @@ export class CartService {
   }
 
   async removeItemFromCart(body): Promise<Cart> {
-    const { userId, productId } = body;
-    const cart = await this.getCartByUserId(userId);
+    const { customerId, productId } = body;
+    const cart = await this.getCartByCustomerId(customerId);
     const product = await this.productsService.getOneProduct(productId);
 
     if (!cart) {
@@ -209,9 +216,9 @@ export class CartService {
     });
   }
 
-  async deleteCart(userId: string): Promise<void> {
+  async deleteCart(customerId: string): Promise<void> {
     try {
-      const cart = await this.getCartByUserId(userId);
+      const cart = await this.getCartByCustomerId(customerId);
 
       if (!cart) {
         throw new NotFoundException('Cart not found');
@@ -224,8 +231,8 @@ export class CartService {
     }
   }
 
-  async applyPromoCodeToCart(userId: string, promoCode: string) {
-    const cart = await this.getCartByUserId(userId);
+  async applyPromoCodeToCart(customerId: string, promoCode: string) {
+    const cart = await this.getCartByCustomerId(customerId);
 
     if (!cart) {
       throw new NotFoundException('Cart not found');

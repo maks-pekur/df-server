@@ -6,9 +6,9 @@ import { CartItemDto } from './dto/cart-item.dto';
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
-  @Get('/:id')
-  async get(@Param('id') id: string) {
-    const cart = await this.cartService.getCartByUserId(id);
+  @Get('/:customerId')
+  async get(@Param('customerId') customerId: string) {
+    const cart = await this.cartService.getCartByCustomerId(customerId);
     return cart;
   }
 
@@ -24,16 +24,9 @@ export class CartController {
     return { message: 'Item successfully removed from cart' };
   }
 
-  @Delete('/:id')
-  async deleteCart(@Param('id') userId: string) {
-    await this.cartService.deleteCart(userId);
+  @Delete('/:customerId')
+  async deleteCart(@Param('customerId') customerId: string) {
+    await this.cartService.deleteCart(customerId);
     return { message: 'Cart successfully deleted' };
-  }
-  @Post(':userId/add-promo-code')
-  async applyPromoCodeToCart(
-    @Param('userId') userId: string,
-    @Body('promoCode') promoCode: string,
-  ): Promise<void> {
-    await this.cartService.applyPromoCodeToCart(userId, promoCode);
   }
 }

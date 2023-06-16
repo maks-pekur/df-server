@@ -12,6 +12,7 @@ import {
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Category } from './entities/category.entity';
 
 @Injectable()
 export class CategoriesService {
@@ -42,13 +43,24 @@ export class CategoriesService {
     }
   }
 
-  async getCategory(id: string): Promise<DocumentReference<DocumentData>> {
-    const categoryRef = doc(this.firebaseService.categoriesCollection, id);
-    const categorySnapshot = await getDoc(categoryRef);
-    if (!categorySnapshot.exists()) {
-      throw new NotFoundException('Category not found');
+  async getCategory(id: string): Promise<Category | null> {
+    const categoryDocRef: DocumentReference<DocumentData> = doc(
+      this.firebaseService.categoriesCollection,
+      id,
+    );
+    const categorySnapshot = await getDoc(categoryDocRef);
+    if (categorySnapshot.exists()) {
+      const categoryData = categorySnapshot.data();
+      const category: Category = {
+        id: categorySnapshot.id,
+        name: categoryData.name,
+        slug: categoryData.slug,
+        docRef: categoryDocRef.path,
+      };
+      return category;
+    } else {
+      return null;
     }
-    return categoryRef;
   }
 
   async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
