@@ -1,15 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
-  addDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  serverTimestamp,
-  updateDoc,
-} from 'firebase/firestore';
+  DocumentData,
+  DocumentReference,
+  DocumentSnapshot,
+  QueryDocumentSnapshot,
+  QuerySnapshot,
+} from 'firebase-admin/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
 
 @Injectable()
@@ -20,14 +19,13 @@ export class RestaurantService {
     createRestaurantDto: CreateRestaurantDto,
   ): Promise<Restaurant> {
     try {
-      const currentTime = serverTimestamp();
+      const currentTime = new Date();
       const newRestaurant = {
         ...createRestaurantDto,
         createdAt: currentTime,
         updatedAt: currentTime,
       };
-      const docRef = await addDoc(
-        this.firebaseService.restaurantsCollection,
+      const docRef = await this.firebaseService.restaurantsCollection.add(
         newRestaurant,
       );
       const createdRestaurant: Restaurant = {
@@ -40,91 +38,55 @@ export class RestaurantService {
     }
   }
 
-  async getRestaurants(): Promise<Restaurant[]> {
+  async getRestaurants(): Promise<DocumentData[]> {
     try {
-      const snapshot = await getDocs(
-        this.firebaseService.restaurantsCollection,
-      );
-      const restaurants: Restaurant[] = [];
-      snapshot.forEach((doc) => {
-        const restaurantData = doc.data();
-        const restaurant: Restaurant = {
-          id: doc.id,
-          name: restaurantData.name,
-          createdAt: restaurantData.createdAt,
-          updatedAt: restaurantData.updatedAt,
-        };
-        restaurants.push(restaurant);
+      const snapshot: QuerySnapshot<DocumentData> =
+        await this.firebaseService.restaurantsCollection.get();
+      const restaurants: DocumentData[] = [];
+      snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+        restaurants.push({ id: doc.id, ...doc.data() });
       });
       return restaurants;
     } catch (error) {
-      throw new NotFoundException('Failed to fetch restaurants');
+      throw new NotFoundException('Restaurants not found');
     }
   }
 
-  async getRestaurant(id: string): Promise<Restaurant> {
+  async getRestaurant(id: string): Promise<DocumentData | null> {
     try {
-      const restaurantDoc = await getDoc(
-        doc(this.firebaseService.restaurantsCollection, id),
-      );
-      if (!restaurantDoc.exists()) {
+      const restaurantDoc: DocumentSnapshot<DocumentData> =
+        await this.firebaseService.restaurantsCollection.doc(id).get();
+      if (!restaurantDoc.exists) {
         return null;
       }
-      const restaurantData = restaurantDoc.data();
-      const restaurant: Restaurant = {
-        id: restaurantDoc.id,
-        name: restaurantData.name,
-        createdAt: restaurantData.createdAt,
-        updatedAt: restaurantData.updatedAt,
-      };
-      return restaurant;
+      return restaurantDoc.data();
     } catch (error) {
       throw new NotFoundException('Restaurant not found');
     }
   }
 
-  async updateRestaurant(id: string, body): Promise<Restaurant> {
+  async updateRestaurant(id: string, updateRestaurantDto: UpdateRestaurantDto) {
     try {
-      const restaurantRef = doc(this.firebaseService.restaurantsCollection, id);
-      const restaurantSnapshot = await getDoc(restaurantRef);
+      const restaurantRef: DocumentReference<DocumentData> =
+        this.firebaseService.restaurantsCollection.doc(id);
 
-      if (!restaurantSnapshot.exists()) {
-        throw new NotFoundException('Restaurant not found');
-      }
-
-      const restaurantData = restaurantSnapshot.data();
       const updatedData = {
-        ...body,
-        updatedAt: serverTimestamp(), // Update the updatedAt field
+        ...updateRestaurantDto,
+        updatedAt: new Date(),
       };
-
-      await updateDoc(restaurantRef, updatedData);
-
-      const updatedRestaurantSnapshot = await getDoc(restaurantRef);
-      const updatedRestaurantData = updatedRestaurantSnapshot.data();
-
-      const updatedRestaurant: Restaurant = {
-        id: updatedRestaurantSnapshot.id,
-        name: restaurantData.name,
-        createdAt: restaurantData.createdAt,
-        updatedAt: updatedRestaurantData.updatedAt,
-        ...updatedRestaurantData,
-      };
-
-      return updatedRestaurant;
+      await restaurantRef.set(updatedData);
     } catch (error) {
-      throw new NotFoundException('Restaurant does not update');
+      throw new NotFoundException('Restaurant was not updated');
     }
   }
 
   async deleteRestaurant(id: string): Promise<void> {
     try {
-      const product = await deleteDoc(
-        doc(this.firebaseService.restaurantsCollection, id),
-      );
-      return product;
+      const restaurantRef: DocumentReference<DocumentData> =
+        this.firebaseService.ingredientsCollection.doc(id);
+      await restaurantRef.delete();
     } catch (error) {
-      throw new NotFoundException('Restaurant does not remove');
+      throw new NotFoundException('Restaurant was not deleted');
     }
   }
 }

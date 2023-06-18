@@ -1,6 +1,10 @@
-import { Product } from 'src/common/product.model';
-
 export class CreatePaymentDto {
-  products: Product[];
   currency: string;
+  amount: number;
+  items: [];
+  metadata: {
+    orderNumber: string;
+    customerName: string;
+    customerPhoneNumber: string;
+  };
 }

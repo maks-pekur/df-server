@@ -9,7 +9,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductsService } from './products.service';
 
@@ -18,7 +18,7 @@ export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
   @Post('/')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('imageUrl'))
   async addProduct(
     @UploadedFile() file: Express.Multer.File,
     @Body() createProductDto: CreateProductDto,
@@ -47,14 +47,9 @@ export class ProductsController {
   async updateProduct(
     @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
-    @Body() createProductDTO: CreateProductDto,
+    @Body() body,
   ) {
-    const product = await this.productService.updateProduct(
-      id,
-      file,
-      createProductDTO,
-    );
-
+    const product = await this.productService.updateProduct(id, file, body);
     return product;
   }
 
@@ -62,11 +57,5 @@ export class ProductsController {
   async deleteProduct(@Param('id') id: string) {
     await this.productService.deleteProduct(id);
     return { message: 'Product successfully deleted' };
-  }
-
-  @Post('/')
-  async addExtraIngredients(@Body() body) {
-    await this.productService.addExtraIngredients(body);
-    return { message: 'Ingredient successfully added from product' };
   }
 }

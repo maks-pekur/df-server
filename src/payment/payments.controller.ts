@@ -6,12 +6,8 @@ export class PaymentsController {
   constructor(private readonly stripeService: StripeService) {}
 
   @Post('/process')
-  async processPayment(@Body() requestBody: any) {
-    const { amount, currency } = requestBody;
-    const paymentIntent = await this.stripeService.createPaymentIntent(
-      amount,
-      currency,
-    );
-    // Return the payment intent or perform additional actions
+  async processPayment(@Body() body: any) {
+    const paymentIntent = await this.stripeService.processPayment(body);
+    return paymentIntent;
   }
 }

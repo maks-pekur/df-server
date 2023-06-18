@@ -1,22 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Auth, getAuth } from 'firebase/auth';
+import { credential } from 'firebase-admin';
+import { App, initializeApp } from 'firebase-admin/app';
+import { Auth, getAuth } from 'firebase-admin/auth';
 import {
   CollectionReference,
   Firestore,
-  collection,
   getFirestore,
-} from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { Config } from 'src/common/config.model';
+} from 'firebase-admin/firestore';
+import { Storage, getStorage } from 'firebase-admin/storage';
 
 @Injectable()
 export class FirebaseService {
-  public app: FirebaseApp;
-  public auth: Auth;
-  public db: Firestore;
-  public storage: any;
+  private static initialized = false;
+  public readonly app: App;
+  public readonly auth: Auth;
+  public readonly db: Firestore;
+  public readonly storage: Storage;
 
   // Collections
   public customersCollection: CollectionReference;
@@ -30,16 +30,20 @@ export class FirebaseService {
   public modifiersCollection: CollectionReference;
   public ordersCollection: CollectionReference;
 
-  constructor(private configService: ConfigService<Config>) {
-    this.app = initializeApp({
-      apiKey: configService.get<string>('API_KEY'),
-      appId: configService.get<string>('APP_ID'),
-      authDomain: configService.get<string>('AUTH_DOMAIN'),
-      measurementId: configService.get<string>('MEASUREMENT_ID'),
-      messagingSenderId: configService.get<string>('MESSAGING_SENDER_ID'),
-      projectId: configService.get<string>('PROJECT_ID'),
-      storageBucket: configService.get<string>('STORAGE_BUCKET'),
-    });
+  constructor(@Inject(ConfigService) private readonly config: ConfigService) {
+    if (!FirebaseService.initialized) {
+      this.app = initializeApp({
+        credential: credential.cert({
+          privateKey: this.config
+            .get<string>('FIREBASE_PRIVATE_KEY')
+            .replace(/\\n/g, '\n'),
+          clientEmail: this.config.get<string>('FIREBASE_CLIENT_EMAIL'),
+          projectId: this.config.get<string>('FIREBASE_PROJECT_ID'),
+        }),
+        databaseURL: this.config.get<string>('FIREBASE_DATABASE_URL'),
+      });
+      FirebaseService.initialized = true;
+    }
 
     this.auth = getAuth(this.app);
     this.db = getFirestore(this.app);
@@ -49,15 +53,15 @@ export class FirebaseService {
   }
 
   private _createCollections() {
-    this.customersCollection = collection(this.db, 'customers');
-    this.productsCollection = collection(this.db, 'products');
-    this.storiesCollection = collection(this.db, 'stories');
-    this.categoriesCollection = collection(this.db, 'categories');
-    this.cartCollection = collection(this.db, 'cart');
-    this.popularProductCollection = collection(this.db, 'populars');
-    this.restaurantsCollection = collection(this.db, 'restaurants');
-    this.ingredientsCollection = collection(this.db, 'ingredients');
-    this.modifiersCollection = collection(this.db, 'modifiers');
-    this.ordersCollection = collection(this.db, 'orders');
+    this.customersCollection = this.db.collection('customers');
+    this.productsCollection = this.db.collection('products');
+    this.storiesCollection = this.db.collection('stories');
+    this.categoriesCollection = this.db.collection('categories');
+    this.cartCollection = this.db.collection('cart');
+    this.popularProductCollection = this.db.collection('populars');
+    this.restaurantsCollection = this.db.collection('restaurants');
+    this.ingredientsCollection = this.db.collection('ingredients');
+    this.modifiersCollection = this.db.collection('modifiers');
+    this.ordersCollection = this.db.collection('orders');
   }
 }

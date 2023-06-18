@@ -1,14 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import {
-  DocumentData,
-  DocumentReference,
-  addDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-} from 'firebase/firestore';
+import { DocumentData, DocumentReference } from 'firebase-admin/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -18,25 +9,34 @@ import { Category } from './entities/category.entity';
 export class CategoriesService {
   constructor(private firebaseService: FirebaseService) {}
 
-  async createCategory(createCategoryDto: CreateCategoryDto) {
+  async createCategory(
+    createCategoryDto: CreateCategoryDto,
+  ): Promise<DocumentData> {
     try {
-      const category = await addDoc(
-        this.firebaseService.categoriesCollection,
-        createCategoryDto,
+      const currentTime = new Date();
+      const categoryData = {
+        createdAt: currentTime,
+        updatedAt: currentTime,
+        ...createCategoryDto,
+      };
+      const categoryRef = await this.firebaseService.categoriesCollection.add(
+        categoryData,
       );
-      return category;
+      return categoryRef;
     } catch (error) {
-      throw new NotFoundException('Category does not create');
+      throw new NotFoundException('Category was not created');
     }
   }
 
-  async getCategories() {
+  async getCategories(): Promise<DocumentData[]> {
     try {
-      const data = await getDocs(this.firebaseService.categoriesCollection);
-      const categories = data.docs.map((doc) => ({
-        ...doc.data(),
+      const querySnapshot =
+        await this.firebaseService.categoriesCollection.get();
+      const categories = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-      }));
+        ...doc.data(),
+      })) as Category[];
+
       return categories;
     } catch (error) {
       throw new NotFoundException('Categories not found');
@@ -44,45 +44,52 @@ export class CategoriesService {
   }
 
   async getCategory(id: string): Promise<Category | null> {
-    const categoryDocRef: DocumentReference<DocumentData> = doc(
-      this.firebaseService.categoriesCollection,
-      id,
-    );
-    const categorySnapshot = await getDoc(categoryDocRef);
-    if (categorySnapshot.exists()) {
-      const categoryData = categorySnapshot.data();
-      const category: Category = {
-        id: categorySnapshot.id,
-        name: categoryData.name,
-        slug: categoryData.slug,
-        docRef: categoryDocRef.path,
-      };
-      return category;
-    } else {
-      return null;
+    try {
+      const categoryDoc = await this.firebaseService.categoriesCollection
+        .doc(id)
+        .get();
+      if (categoryDoc.exists) {
+        const categoryData = categoryDoc.data();
+        const category: Category = {
+          id: categoryDoc.id,
+          name: categoryData.name,
+          slug: categoryData.slug,
+          docRef: categoryDoc.ref.path,
+        };
+        return category;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      throw new NotFoundException('Category not found');
     }
   }
 
-  async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
+  async updateCategory(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<DocumentData> {
     try {
-      const category = await setDoc(
-        doc(this.firebaseService.categoriesCollection, id),
-        updateCategoryDto,
-      );
-      return category;
+      const categoryRef: DocumentReference<DocumentData> =
+        this.firebaseService.categoriesCollection.doc(id);
+
+      const updatedData = {
+        ...updateCategoryDto,
+        updatedAt: new Date(),
+      };
+
+      await categoryRef.set(updatedData);
+      return updatedData;
     } catch (error) {
-      throw new NotFoundException('Category does not update');
+      throw new NotFoundException('Ingredient was not updated');
     }
   }
 
   async removeCategory(id: string) {
     try {
-      const category = await deleteDoc(
-        doc(this.firebaseService.categoriesCollection, id),
-      );
-      return category;
+      await this.firebaseService.categoriesCollection.doc(id).delete();
     } catch (error) {
-      throw new NotFoundException('Category does not remove');
+      throw new NotFoundException('Category was not removed');
     }
   }
 }

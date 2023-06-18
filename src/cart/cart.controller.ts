@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CartItemDto } from './dto/cart-item.dto';
 
@@ -6,10 +14,22 @@ import { CartItemDto } from './dto/cart-item.dto';
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
-  @Get('/:customerId')
+  @Get('/customer/:customerId')
   async get(@Param('customerId') customerId: string) {
     const cart = await this.cartService.getCartByCustomerId(customerId);
     return cart;
+  }
+
+  @Get('/:cartId')
+  async getCartById(@Param('cartId') cartId: string) {
+    const cart = this.cartService.getCartById(cartId);
+    return cart;
+  }
+
+  @Patch('/update/:cartId')
+  async updateCart(@Param('cartId') cartId: string, @Body() body) {
+    await this.cartService.updateCart(cartId, body);
+    return { message: 'Cart successfully updated' };
   }
 
   @Post('/')

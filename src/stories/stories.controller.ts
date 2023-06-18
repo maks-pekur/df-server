@@ -6,7 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { StoriesService } from './stories.service';
@@ -16,8 +19,13 @@ export class StoriesController {
   constructor(private readonly storiesService: StoriesService) {}
 
   @Post()
-  create(@Body() createStoryDto: CreateStoryDto) {
-    return this.storiesService.create(createStoryDto);
+  @UseInterceptors(FileInterceptor('imageUrl'))
+  async create(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createStoryDto: CreateStoryDto,
+  ) {
+    await this.storiesService.create(file, createStoryDto);
+    return { message: 'Story successfully created' };
   }
 
   @Get()
@@ -33,11 +41,13 @@ export class StoriesController {
   }
 
   @Patch(':id')
+  @UseInterceptors(FileInterceptor('imageUrl'))
   async update(
+    @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
     @Body() updateStoryDto: UpdateStoryDto,
   ) {
-    await this.storiesService.update(id, updateStoryDto);
+    await this.storiesService.update(id, file, updateStoryDto);
     return { message: 'Story successfully updated' };
   }
 

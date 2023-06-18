@@ -9,7 +9,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
 import { IngredientsService } from './ingredients.service';
@@ -31,7 +31,7 @@ export class IngredientsController {
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('imageUrl'))
   async create(
     @UploadedFile() file: Express.Multer.File,
     @Body() createIngredientDto: CreateIngredientDto,
@@ -41,11 +41,17 @@ export class IngredientsController {
   }
 
   @Patch(':id')
+  @UseInterceptors(FileInterceptor('imageUrl'))
   async update(
+    @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
     @Body() updateIngredientDto: UpdateIngredientDto,
   ) {
-    await this.ingredientsService.updateIngredient(id, updateIngredientDto);
+    await this.ingredientsService.updateIngredient(
+      id,
+      file,
+      updateIngredientDto,
+    );
     return { message: 'Ingredient successfully updated' };
   }
 
@@ -54,19 +60,4 @@ export class IngredientsController {
     await this.ingredientsService.deleteIngredient(id);
     return { message: 'Ingredient successfully removed' };
   }
-
-  // @Post('groups')
-  // async createIngredientGroup(
-  //   @Body() group: IngredientGroup,
-  // ): Promise<IngredientGroup> {
-  //   return this.ingredientsService.createIngredientGroup(group);
-  // }
-
-  // @Post('groups/:groupId/ingredients/:ingredientId')
-  // async addIngredientToGroup(
-  //   @Param('groupId') groupId: string,
-  //   @Param('ingredientId') ingredientId: string,
-  // ): Promise<IngredientGroup> {
-  //   return this.ingredientsService.addIngredientToGroup(groupId, ingredientId);
-  // }
 }

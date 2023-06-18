@@ -1,4 +1,4 @@
-import { DocumentData, DocumentReference } from 'firebase/firestore';
+import { DocumentData, DocumentReference } from 'firebase-admin/firestore';
 
 export class CartItem {
   productId: string;
@@ -14,6 +14,8 @@ export class Cart {
   totalPrice: number;
   deliveryCost: number;
   coinCount: number;
+  paymentMethodType: string;
+  orderType: string;
   createdAt: any;
   updatedAt: any;
 }

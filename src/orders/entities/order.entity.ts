@@ -1,16 +1,33 @@
 export enum orderStatus {
-  pending = 'pending',
-  accepted = 'accepted',
-  preparing = 'preparing',
-  ready = 'ready',
-  delivered = 'delivered',
-  completed = 'completed',
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  PREPARING = 'preparing',
+  READY = 'ready',
+  DELIVERED = 'delivered',
+  COMPLETED = 'completed',
+  CANCELED = 'canceled',
+}
+
+export enum paymentStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  FAILED = 'failed',
+  SUCCEEDED = 'succeeded',
+}
+
+export enum paymentMethod {
+  CASH = 'cash',
+  CART_ON_DELIVERY = 'card_on_delivery',
+  CARD = 'card',
+  BLIK = 'blik',
+  APPLE_PAY = 'apple_pay',
+  GOOGLE_PAY = 'google_pay',
 }
 
 export enum orderType {
-  delivery = 'delivery',
-  takeaway = 'takeaway',
-  inside = 'inside',
+  DELIVERY = 'delivery',
+  TAKE_AWAY = 'takeaway',
+  INSIDE = 'inside',
 }
 
 export class OrderedItems {
@@ -37,6 +54,9 @@ export class Order {
   };
   orderedItems: OrderedItems[];
   orderStatus: orderStatus;
+  currency: string;
+  paymentStatus: paymentStatus;
+  paymentMethodType: paymentMethod;
   createdAt: any;
-  updatedAt: any;
+  statusUpdates: Array<{ [key in orderStatus]?: Date | null }>;
 }

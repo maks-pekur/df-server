@@ -2,6 +2,7 @@
 /dist
 /node_modules
 
+.firebase/
 # Logs
 logs
 *.log
@@ -33,6 +34,6 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-
+/serviceAccountKey.json
 .env*
 .vercel

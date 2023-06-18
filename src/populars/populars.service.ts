@@ -1,5 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { addDoc, deleteDoc, doc, getDoc, getDocs } from 'firebase/firestore';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreatePopularDto } from './dto/create-popular.dto';
 
@@ -9,22 +12,22 @@ export class PopularsService {
 
   async create(createPopularProductDto: CreatePopularDto) {
     try {
-      const product = await addDoc(
-        this.firebaseService.popularProductCollection,
+      const docRef = await this.firebaseService.popularProductCollection.add(
         createPopularProductDto,
       );
-      return product;
+      return docRef.id;
     } catch (error) {
-      throw new NotFoundException('Product does not create');
+      throw new BadRequestException('Product does not create');
     }
   }
 
   async findAll() {
     try {
-      const data = await getDocs(this.firebaseService.popularProductCollection);
-      const products = data.docs.map((doc) => ({
-        ...doc.data(),
+      const snapshot =
+        await this.firebaseService.popularProductCollection.get();
+      const products = snapshot.docs.map((doc) => ({
         id: doc.id,
+        ...doc.data(),
       }));
       return products;
     } catch (error) {
@@ -34,10 +37,13 @@ export class PopularsService {
 
   async findOne(id: string) {
     try {
-      const product = await getDoc(
-        doc(this.firebaseService.popularProductCollection, id),
-      );
-      return { ...product.data(), id: product.id };
+      const docRef = await this.firebaseService.popularProductCollection
+        .doc(id)
+        .get();
+      if (!docRef.exists) {
+        throw new NotFoundException('Product not found');
+      }
+      return { id: docRef.id, ...docRef.data() };
     } catch (error) {
       throw new NotFoundException('Product not found');
     }
@@ -45,10 +51,8 @@ export class PopularsService {
 
   async remove(id: string) {
     try {
-      const product = await deleteDoc(
-        doc(this.firebaseService.popularProductCollection, id),
-      );
-      return product;
+      await this.firebaseService.popularProductCollection.doc(id).delete();
+      return;
     } catch (error) {
       throw new NotFoundException('Product does not remove');
     }

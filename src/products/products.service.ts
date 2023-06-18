@@ -1,15 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   DocumentData,
+  DocumentReference,
   DocumentSnapshot,
-  addDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-} from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+  QueryDocumentSnapshot,
+  QuerySnapshot,
+} from 'firebase-admin/firestore';
 import { CategoriesService } from 'src/categories/categories.service';
 import { Product } from 'src/common/product.model';
 import { FirebaseService } from 'src/firebase/firebase.service';
@@ -37,27 +33,30 @@ export class ProductsService {
       const imageUrl = await this.uploadImage(file);
 
       const { categoryId } = createProductDto;
-      const category = await this.categoriesService.getCategory(categoryId);
+      const categoryRef = await this.categoriesService.getCategory(categoryId);
 
-      if (!category) {
+      if (!categoryRef) {
         throw new NotFoundException('Category not found');
       }
-      const productData = {
+
+      const productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> = {
         imageUrl,
-        categoryId: category.docRef,
+        categoryId: categoryRef,
         ...createProductDto,
       };
 
-      const productRef = await addDoc(
-        this.firebaseService.productsCollection,
-        productData,
-      );
-      const productSnapshot = await getDoc(productRef);
+      const productRef: DocumentReference =
+        await this.firebaseService.productsCollection.doc();
+      await productRef.set(productData);
+
+      const productSnapshot: DocumentSnapshot<DocumentData> =
+        await productRef.get();
+
       const product: Product = {
         id: productSnapshot.id,
-        imageUrl: productData.imageUrl,
-        categoryId: productData.categoryId,
-        ...createProductDto,
+        createdAt: productSnapshot.createTime.toDate(),
+        updatedAt: productSnapshot.updateTime.toDate(),
+        ...productData,
       };
 
       return product;
@@ -68,53 +67,53 @@ export class ProductsService {
 
   async uploadImage(file: Express.Multer.File): Promise<string> {
     const fileName = `${uuidv4()}.${file.originalname.split('.').pop()}`;
+    const bucket = this.firebaseService.storage.bucket();
 
-    const storageRef = ref(
-      this.firebaseService.storage,
-      `images/products/${fileName}`,
-    );
+    const fileRef = bucket.file(`images/products/${fileName}`);
+    const contentType = file.mimetype;
 
-    await uploadBytes(storageRef, file.buffer, {
-      contentType: file.mimetype,
-      customMetadata: {
-        originalName: file.originalname,
+    await fileRef.save(file.buffer, {
+      metadata: {
+        contentType,
+        metadata: {
+          originalName: file.originalname,
+        },
       },
     });
 
-    const imageUrl = await getDownloadURL(storageRef);
-    return imageUrl;
+    const [signedUrl] = await fileRef.getSignedUrl({
+      action: 'read',
+      expires: '03-09-2491',
+    });
+
+    return signedUrl;
   }
 
-  async getAllProducts(): Promise<Product[]> {
+  async getAllProducts(): Promise<DocumentData[]> {
     try {
-      const productsSnapshot = await getDocs(
-        this.firebaseService.productsCollection,
-      );
-      const products: Product[] = [];
-
-      productsSnapshot.forEach((doc) => {
-        const productData = doc.data() as Product;
-        products.push({ id: doc.id, ...productData });
+      const snapshot: QuerySnapshot<DocumentData> =
+        await this.firebaseService.productsCollection.get();
+      const products: DocumentData[] = [];
+      snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+        const product = doc.data();
+        products.push({ id: doc.id, ...product });
       });
-
       return products;
     } catch (error) {
       throw new NotFoundException('Products not found');
     }
   }
 
-  async getOneProduct(id: string): Promise<Product | null> {
+  async getOneProduct(id: string): Promise<DocumentData | null> {
     try {
-      const productDoc = doc(this.firebaseService.productsCollection, id);
-      const productSnapshot: DocumentSnapshot<DocumentData> = await getDoc(
-        productDoc,
-      );
-      const productData: Product | undefined = productSnapshot.data() as
-        | Product
-        | undefined;
-      return productData ?? null;
+      const productDoc: DocumentSnapshot<DocumentData> =
+        await this.firebaseService.productsCollection.doc(id).get();
+      if (!productDoc.exists) {
+        return null;
+      }
+      return productDoc.data();
     } catch (error) {
-      throw new NotFoundException('Customer not found');
+      throw new NotFoundException('Product not found');
     }
   }
 
@@ -126,12 +125,20 @@ export class ProductsService {
     try {
       const { categoryId } = updateProductDto;
       const categoryRef = await this.categoriesService.getCategory(categoryId);
+      if (!categoryRef) {
+        throw new NotFoundException('Category not found');
+      }
 
-      const productDoc = doc(this.firebaseService.productsCollection, id);
-      const productSnapshot: DocumentSnapshot<DocumentData> = await getDoc(
-        productDoc,
-      );
-      const productData = productSnapshot.data();
+      const productRef: DocumentReference =
+        this.firebaseService.productsCollection.doc(id);
+      const productSnapshot: DocumentSnapshot = await productRef.get();
+
+      if (!productSnapshot.exists) {
+        throw new NotFoundException('Product not found');
+      }
+
+      const productData: Partial<Product> =
+        productSnapshot.data() as Partial<Product>;
 
       if (file) {
         const isValidImage = imageValidation(file.mimetype);
@@ -139,18 +146,27 @@ export class ProductsService {
           throw new Error('Invalid image format');
         }
         const imageUrl = await this.uploadImage(file);
-
         productData.imageUrl = imageUrl;
       }
 
-      productData.categoryId = categoryRef;
+      productData.categoryId = categoryRef.id;
       Object.assign(productData, updateProductDto);
 
-      if (!file) {
-        delete productData.image;
-      }
-      await setDoc(productDoc, productData);
-      return productData as Product;
+      await productRef.update(productData);
+      const updatedProductSnapshot: DocumentSnapshot = await productRef.get();
+
+      const updatedProduct: Product = {
+        id: updatedProductSnapshot.id,
+        name: updatedProductSnapshot.get('name'),
+        imageUrl: updatedProductSnapshot.get('imageUrl'),
+        price: updatedProductSnapshot.get('price'),
+        categoryId: updatedProductSnapshot.get('categoryId'),
+        createdAt: updatedProductSnapshot.get('createdAt'),
+        updatedAt: updatedProductSnapshot.get('updatedAt'),
+        ...updateProductDto,
+      };
+
+      return updatedProduct;
     } catch (error) {
       throw new NotFoundException('Product does not update');
     }
@@ -158,20 +174,11 @@ export class ProductsService {
 
   async deleteProduct(id: string): Promise<void> {
     try {
-      const product = await deleteDoc(
-        doc(this.firebaseService.productsCollection, id),
-      );
-      return product;
+      const productRef: DocumentReference =
+        this.firebaseService.productsCollection.doc(id);
+      await productRef.delete();
     } catch (error) {
       throw new NotFoundException('Product does not remove');
-    }
-  }
-
-  async addExtraIngredients(body): Promise<void> {
-    try {
-      const { productId, ingredientId } = body;
-    } catch (error) {
-      throw new NotFoundException('Ingredient does not remove');
     }
   }
 }

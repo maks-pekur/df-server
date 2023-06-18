@@ -13,7 +13,7 @@ export class CreateProductDto {
 
   @IsString()
   @IsOptional()
-  description: string;
+  description?: string;
 
   @IsNumber()
   price: number;
@@ -23,36 +23,36 @@ export class CreateProductDto {
 
   @IsArray()
   @IsOptional()
-  extraIngredients: string[];
+  extraIngredients?: string[];
 
   @IsNumber()
   @IsOptional()
-  fatAmount: number;
+  fatAmount?: number;
 
   @IsNumber()
   @IsOptional()
-  proteinsAmount: number;
+  proteinsAmount?: number;
 
   @IsNumber()
   @IsOptional()
-  carbohydratesAmount: number;
+  carbohydratesAmount?: number;
 
   @IsNumber()
   @IsOptional()
-  energyAmount: number;
+  energyAmount?: number;
 
-  @IsOptional()
   @IsArray()
-  tags: string[];
+  @IsOptional()
+  tags?: string[];
 
   @IsNumber()
   @IsOptional()
-  weight: number;
+  weight?: number;
 
   @IsNotEmpty()
   categoryId: string;
 
   @IsString()
   @IsOptional()
-  measureUnit: string;
+  measureUnit?: string;
 }

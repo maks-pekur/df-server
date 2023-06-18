@@ -1,16 +1,18 @@
 export class Product {
-  id?: string;
+  id: string;
   name: string;
-  description: string;
+  description?: string;
   imageUrl: string;
-  extraIngredients: string[];
+  extraIngredients?: string[];
   price: number;
-  tags: string[];
-  weight: number;
+  tags?: string[];
+  weight?: number;
   categoryId: string;
-  measureUnit: string;
-  carbohydratesAmount: number;
-  fatAmount: number;
-  energyAmount: number;
-  proteinsAmount: number;
+  measureUnit?: string;
+  carbohydratesAmount?: number;
+  fatAmount?: number;
+  energyAmount?: number;
+  proteinsAmount?: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

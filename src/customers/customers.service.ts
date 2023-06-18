@@ -1,17 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import {
-  DocumentData,
-  DocumentSnapshot,
-  addDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  serverTimestamp,
-  setDoc,
-} from 'firebase/firestore';
-import { Customer } from 'src/common/customer.model';
+import { DocumentData } from 'firebase-admin/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { v4 as uuidv4 } from 'uuid';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
@@ -21,47 +11,44 @@ export class CustomersService {
 
   async addCustomer(createCustomerDto: CreateCustomerDto) {
     try {
-      const currentTime = serverTimestamp();
+      const currentTime = new Date().toISOString();
+      const customerId = uuidv4();
+
       const newCustomer = {
+        id: customerId,
         ...createCustomerDto,
         createdAt: currentTime,
         updatedAt: currentTime,
       };
-      await addDoc(this.firebaseService.customersCollection, newCustomer);
+
+      await this.firebaseService.customersCollection
+        .doc(customerId)
+        .set(newCustomer);
+
       return newCustomer;
     } catch (error) {
-      throw new NotFoundException('Customers does not create');
+      throw new NotFoundException('Customers were not created');
     }
   }
 
-  async getCustomers(): Promise<Customer[]> {
+  async getCustomers(): Promise<DocumentData[]> {
     try {
-      const querySnapshot = await getDocs(
-        this.firebaseService.customersCollection,
-      );
-      const customers: Customer[] = [];
-
-      querySnapshot.forEach((doc) => {
-        const customerData = doc.data() as Customer;
-        customers.push(customerData);
-      });
-
-      return customers;
+      const snapshot = await this.firebaseService.customersCollection.get();
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
       throw new Error('Error getting customers');
     }
   }
 
-  async getCustomer(id: string): Promise<Customer | null> {
+  async getCustomer(id: string): Promise<DocumentData | null> {
     try {
-      const customerDoc = doc(this.firebaseService.customersCollection, id);
-      const customerSnapshot: DocumentSnapshot<DocumentData> = await getDoc(
-        customerDoc,
-      );
-      const customerData: Customer | undefined = customerSnapshot.data() as
-        | Customer
-        | undefined;
-      return customerData ?? null;
+      const snapshot = await this.firebaseService.customersCollection
+        .doc(id)
+        .get();
+      if (!snapshot.exists) {
+        return null;
+      }
+      return snapshot.data();
     } catch (error) {
       throw new NotFoundException('Customer not found');
     }
@@ -70,28 +57,39 @@ export class CustomersService {
   async updateCustomer(
     id: string,
     updateCustomerDto: UpdateCustomerDto,
-  ): Promise<Customer> {
+  ): Promise<DocumentData> {
     try {
-      const customerDoc = doc(this.firebaseService.customersCollection, id);
-      const customerSnapshot = await getDoc(customerDoc);
-      const customerData = customerSnapshot.data();
+      const customerRef = this.firebaseService.customersCollection.doc(id);
+      const snapshot = await customerRef.get();
 
-      Object.assign(customerData, updateCustomerDto);
+      if (!snapshot.exists) {
+        throw new NotFoundException('Customer not found');
+      }
 
-      const currentTime = serverTimestamp();
-      customerData.updatedAt = currentTime;
+      const updatedCustomer = {
+        ...snapshot.data(),
+        ...updateCustomerDto,
+        updatedAt: new Date().toISOString(),
+      };
 
-      await setDoc(customerDoc, customerData);
-      return customerData as Customer;
+      await customerRef.set(updatedCustomer);
+
+      return updatedCustomer;
     } catch (error) {
-      throw new NotFoundException('Product does not update');
+      throw new NotFoundException('Customer was not updated');
     }
   }
 
   async removeCustomer(id: string): Promise<void> {
     try {
-      const customerDoc = doc(this.firebaseService.customersCollection, id);
-      await deleteDoc(customerDoc);
+      const customerRef = this.firebaseService.customersCollection.doc(id);
+      const snapshot = await customerRef.get();
+
+      if (!snapshot.exists) {
+        throw new NotFoundException('Customer not found');
+      }
+
+      await customerRef.delete();
     } catch (error) {
       throw new NotFoundException('Customer was not found');
     }

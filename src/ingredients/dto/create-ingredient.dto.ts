@@ -13,6 +13,7 @@ export class CreateIngredientDto {
   title: string;
 
   @IsNumber()
+  @IsNotEmpty()
   price: number;
 
   @IsNotEmpty()
