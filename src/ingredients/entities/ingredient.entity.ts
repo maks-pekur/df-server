@@ -1,10 +1,10 @@
+import { DocumentReference } from 'firebase-admin/firestore';
+
 export class Ingredient {
   id?: string;
   name: string;
   price: string;
   imageUrl: string;
-  selected: boolean;
-  groupId?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -12,5 +12,7 @@ export class Ingredient {
 export class IngredientGroup {
   id?: string;
   name: string;
-  ingredients?: string[];
+  ingredientsIds?: DocumentReference[];
+  createdAt: Date;
+  updatedAt: Date;
 }

@@ -5,16 +5,19 @@ export class Product {
   name: string;
   description?: string;
   imageUrl: string;
-  extraIngredients?: string[];
-  price: string;
-  tags?: string[];
-  measureUnitValue?: number;
   categoryId: DocumentReference;
+  price: string;
+  measureUnitValue?: number;
   measureUnit?: string;
   carbohydratesAmount?: number;
   fatAmount?: number;
   energyAmount?: number;
   proteinsAmount?: number;
+  extraIngredients?: DocumentReference[];
+  ingredientGroups?: DocumentReference[];
+  removedIngredients?: DocumentReference[];
+  modifierGroupsIds?: DocumentReference[];
+  tags?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

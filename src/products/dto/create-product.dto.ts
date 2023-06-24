@@ -5,7 +5,10 @@ export class CreateProductDto {
   description?: string;
   price: string;
   imageUrl: string;
-  extraIngredients?: string[];
+  extraIngredients?: DocumentReference[];
+  ingredientGroups?: DocumentReference[];
+  modifierGroupsIds?: DocumentReference[];
+  removedIngredients?: DocumentReference[];
   fatAmount?: number;
   proteinsAmount?: number;
   carbohydratesAmount?: number;

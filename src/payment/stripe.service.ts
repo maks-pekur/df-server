@@ -22,12 +22,17 @@ export class StripeService {
   }
 
   async processPayment(paymentData: any): Promise<Stripe.PaymentIntent> {
-    const { paymentMethodType, currency, amount } = paymentData;
+    const { paymentMethodType, currency, amount, cutomerId, orderNumber } =
+      paymentData;
     try {
       const paymentIntent = await this.stripe.paymentIntents.create({
         amount: amount,
         currency: currency,
         payment_method_types: [paymentMethodType],
+        metadata: {
+          orderNumber,
+          cutomerId,
+        },
       });
 
       return paymentIntent;

@@ -1,57 +1,69 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { CreateModifierDto } from './dto/create-modifire.dto';
+import { CreateModifierDto } from './dto/create-modifier.dto';
+import { UpdateModifierDto } from './dto/update-modifier.dto';
+import { Modifier } from './entities/modifire.entity';
 
 @Injectable()
 export class ModifiersService {
   constructor(private firebaseService: FirebaseService) {}
 
-  async createModifier(body: CreateModifierDto): Promise<void> {
-    try {
-      await this.firebaseService.db.collection('modifiers').add(body);
-    } catch (error) {
-      throw new NotFoundException('Modifier was not created');
+  async createModifier(
+    createModifierDto: CreateModifierDto,
+  ): Promise<Modifier> {
+    const currentTime = new Date();
+    const modifierData = {
+      createdAt: currentTime,
+      updatedAt: currentTime,
+      ...createModifierDto,
+    };
+
+    const modifierRef = this.firebaseService.modifiersCollection.doc();
+    await modifierRef.set(modifierData);
+
+    const modifier = await modifierRef.get();
+
+    return {
+      id: modifier.id,
+      ...modifier.data(),
+    } as Modifier;
+  }
+
+  async getModifier(id: string): Promise<Modifier> {
+    const doc = await this.firebaseService.modifiersCollection.doc(id).get();
+
+    if (!doc.exists) {
+      throw new NotFoundException('Modifier not found');
     }
+
+    return {
+      id: doc.id,
+      ...doc.data(),
+    } as Modifier;
   }
 
   async updateModifier(
-    modifierId: string,
-    body: CreateModifierDto,
-  ): Promise<void> {
-    try {
-      const modifierRef: DocumentReference = this.firebaseService.db
-        .collection('modifiers')
-        .doc(modifierId);
-      await modifierRef.set(body);
-    } catch (error) {
-      throw new NotFoundException('Modifier was not updated');
-    }
+    id: string,
+    updateModifierDto: UpdateModifierDto,
+  ): Promise<Modifier> {
+    const updatedData = {
+      ...updateModifierDto,
+      updatedAt: new Date(),
+    };
+
+    const modifierRef = this.firebaseService.modifiersCollection.doc(id);
+    await modifierRef.update(updatedData);
+
+    const updatedDoc = await modifierRef.get();
+
+    return {
+      id: updatedDoc.id,
+      ...updatedDoc.data(),
+    } as Modifier;
   }
 
-  async getModifier(modifierId: string): Promise<any> {
-    try {
-      const modifierRef: DocumentReference = this.firebaseService.db
-        .collection('modifiers')
-        .doc(modifierId);
-      const modifierDoc: DocumentSnapshot = await modifierRef.get();
-      if (!modifierDoc.exists) {
-        return null;
-      }
-      return modifierDoc.data();
-    } catch (error) {
-      throw new NotFoundException('Modifier not found');
-    }
-  }
-
-  async deleteModifier(modifierId: string): Promise<void> {
-    try {
-      const modifierRef: DocumentReference = this.firebaseService.db
-        .collection('modifiers')
-        .doc(modifierId);
-      await modifierRef.delete();
-    } catch (error) {
-      throw new NotFoundException('Modifier was not deleted');
-    }
+  async removeModifier(id: string): Promise<void> {
+    const docRef = this.firebaseService.modifiersCollection.doc(id);
+    await docRef.delete();
   }
 }

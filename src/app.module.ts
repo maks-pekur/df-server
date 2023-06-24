@@ -14,6 +14,7 @@ import { PopularsModule } from './populars/populars.module';
 import { ProductsModule } from './products/products.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
+import { StopListModule } from './stop-list/stop-list.module';
 import { StoriesModule } from './stories/stories.module';
 
 @Module({
@@ -32,6 +33,7 @@ import { StoriesModule } from './stories/stories.module';
     ModifiersModule,
     CustomersModule,
     AuthModule,
+    StopListModule,
   ],
   controllers: [AppController],
   providers: [AppService],

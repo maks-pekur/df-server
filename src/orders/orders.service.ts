@@ -50,12 +50,12 @@ export class OrdersService {
 
       const newOrder: Order = {
         orderNumber,
-        customerName: customer.name || '',
+        customerName: customer.name || null,
         customerPhoneNumber: customer.phoneNumber,
-        createdAt: currentTime,
         orderStatus: orderStatus.PENDING,
         statusUpdates: [{ [orderStatus.PENDING]: currentTime }],
         paymentStatus: paymentStatus.PENDING,
+        createdAt: currentTime,
         ...orderData,
       };
 
@@ -70,8 +70,8 @@ export class OrdersService {
           paymentMethodType: orderData.paymentMethodType,
           amount: orderData.totalPrice,
           metadata: {
-            order_number: orderNumber,
-            customerName: customer.name ? customer.name : 'unknown',
+            orderNumber: orderNumber,
+            customerId: customer.id,
           },
         });
 

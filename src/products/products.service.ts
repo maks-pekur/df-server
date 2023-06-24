@@ -31,9 +31,18 @@ export class ProductsService {
     try {
       const snapshot: QuerySnapshot<DocumentData> =
         await this.firebaseService.productsCollection.get();
+
+      const stopListDoc = await this.firebaseService.stopListCollection
+        .doc('list')
+        .get();
+
+      const stopList = stopListDoc.data();
       const products: DocumentData[] = [];
+
       snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
         const product = doc.data();
+        product.isInStopList =
+          stopList && stopList.productUUIDs.includes(doc.id);
         products.push({ id: doc.id, ...product });
       });
       return products;
@@ -50,7 +59,17 @@ export class ProductsService {
       if (!productDoc.exists) {
         return null;
       }
-      return productDoc.data();
+      const productData = productDoc.data();
+
+      const stopListDoc: DocumentSnapshot<DocumentData> =
+        await this.firebaseService.stopListCollection.doc('list').get();
+      if (!stopListDoc.exists) {
+        throw new NotFoundException('StopList not found');
+      }
+      const stopList = stopListDoc.data();
+
+      productData.isInStopList = stopList && stopList.productUUIDs.includes(id);
+      return productData;
     } catch (error) {
       this.logger.error(error);
       throw new NotFoundException('Product not found');
@@ -165,8 +184,10 @@ export class ProductsService {
       Object.assign(productData, updateProductDto);
 
       const updatedData = {
-        ...productData,
+        categoryId: this.firebaseService.db.doc(`categories/${categoryId}`),
+        imageUrl: productData.imageUrl,
         updatedAt: new Date(),
+        ...updateProductDto,
       };
 
       await productRef.update(updatedData);
@@ -174,12 +195,9 @@ export class ProductsService {
 
       const updatedProduct: Product = {
         id: updatedProductSnapshot.id,
-        name: updatedProductSnapshot.get('name'),
         imageUrl: updatedProductSnapshot.get('imageUrl'),
-        price: updatedProductSnapshot.get('price'),
-        categoryId: updatedProductSnapshot.get('categoryId'),
-        createdAt: updatedProductSnapshot.createTime,
-        updatedAt: updatedProductSnapshot.updateTime,
+        createdAt: updatedProductSnapshot.createTime.toDate(),
+        updatedAt: updatedProductSnapshot.updateTime.toDate(),
         ...updateProductDto,
       };
 
@@ -194,25 +212,53 @@ export class ProductsService {
     try {
       const productRef: DocumentReference =
         this.firebaseService.productsCollection.doc(id);
-      const productSnapshot: DocumentSnapshot = await productRef.get();
 
-      if (!productSnapshot.exists) {
-        throw new NotFoundException('Product not found');
-      }
+      const stopListRef = this.firebaseService.stopListCollection.doc('list');
 
-      const productData: Product = productSnapshot.data() as Product;
-
-      const imageUrl = productData.imageUrl;
-      const imagePath = this.firebaseService.getPathFromUrl(imageUrl);
-      try {
-        await this.firebaseService.deleteFileFromStorage(imagePath);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to delete file ${imagePath} from Firebase Storage. Error: ${error.message}`,
+      // Start transaction
+      await this.firebaseService.db.runTransaction(async (transaction) => {
+        // Get product from Firestore
+        const productSnapshot: DocumentSnapshot = await transaction.get(
+          productRef,
         );
-      }
 
-      await productRef.delete();
+        if (!productSnapshot.exists) {
+          throw new NotFoundException('Product not found');
+        }
+
+        // Get stopList from Firestore
+        const stopListSnapshot = await transaction.get(stopListRef);
+        let stopListData = null;
+        if (stopListSnapshot.exists) {
+          stopListData = stopListSnapshot.data();
+          if (stopListData.productUUIDs.includes(id)) {
+            stopListData.productUUIDs = stopListData.productUUIDs.filter(
+              (uuid) => uuid !== id,
+            );
+          }
+        }
+
+        const productData: Product = productSnapshot.data() as Product;
+        const imageUrl = productData.imageUrl;
+        const imagePath = this.firebaseService.getPathFromUrl(imageUrl);
+
+        // Delete image from Firebase Storage
+        try {
+          await this.firebaseService.deleteFileFromStorage(imagePath);
+        } catch (error) {
+          this.logger.warn(
+            `Failed to delete file ${imagePath} from Firebase Storage. Error: ${error.message}`,
+          );
+        }
+
+        // Delete product from Firestore
+        transaction.delete(productRef);
+
+        // Update stopList in Firestore
+        if (stopListData !== null) {
+          transaction.update(stopListRef, stopListData);
+        }
+      });
     } catch (error) {
       this.logger.error(error);
       throw new NotFoundException('Product does not remove');

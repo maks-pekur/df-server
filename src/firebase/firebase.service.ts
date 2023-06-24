@@ -30,7 +30,10 @@ export class FirebaseService {
   public popularProductCollection: CollectionReference;
   public restaurantsCollection: CollectionReference;
   public ingredientsCollection: CollectionReference;
+  public ingredientGroupsCollection: CollectionReference;
   public modifiersCollection: CollectionReference;
+  public modifierGroupsCollection: CollectionReference;
+  public stopListCollection: CollectionReference;
   public ordersCollection: CollectionReference;
 
   constructor(@Inject(ConfigService) private readonly config: ConfigService) {
@@ -133,7 +136,10 @@ export class FirebaseService {
     this.popularProductCollection = this.db.collection('populars');
     this.restaurantsCollection = this.db.collection('restaurants');
     this.ingredientsCollection = this.db.collection('ingredients');
+    this.ingredientGroupsCollection = this.db.collection('ingredients-group');
     this.modifiersCollection = this.db.collection('modifiers');
+    this.modifierGroupsCollection = this.db.collection('modifiers-group');
+    this.stopListCollection = this.db.collection('stop-list');
     this.ordersCollection = this.db.collection('orders');
   }
 }

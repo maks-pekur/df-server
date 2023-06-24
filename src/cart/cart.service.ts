@@ -38,7 +38,10 @@ export class CartService {
           totalPrice: cartData.totalPrice,
           items: cartData.items || [],
           deliveryCost: cartData.deliveryCost || 0,
-          coinCount: cartData.coinCount || 0,
+          loyaltyProgramCoinsRewarded:
+            cartData.loyaltyProgramCoinsRewarded || 0,
+          loyaltyProgramCoinsSpent: cartData.loyaltyProgramCoinsSpent || 0,
+          discount: cartData.discount || 0,
           paymentMethodType: cartData.paymentMethodType,
           orderType: cartData.orderType,
           createdAt: cartData.createdAt,
@@ -146,12 +149,14 @@ export class CartService {
           customerId,
           items: [newItem],
           totalPrice: 0,
-          coinCount: 0,
+          loyaltyProgramCoinsRewarded: 0,
+          loyaltyProgramCoinsSpent: 0,
           deliveryCost: 0,
           createdAt: currentTime,
           updatedAt: currentTime,
           paymentMethodType: paymentMethod.CARD,
           orderType: orderType.TAKE_AWAY,
+          discount: 0,
         };
 
         const cartRef = await this.firebaseService.cartCollection.add(
@@ -242,14 +247,14 @@ export class CartService {
     }
 
     const deliveryCost = calculateDeliveryCost(totalItemsPrice);
-    const coinCount = Math.floor((totalItemsPrice * 5) / 100);
+    const loyaltyProgramCoinsRewarded = Math.floor((totalItemsPrice * 5) / 100);
     const totalPrice = totalItemsPrice + deliveryCost;
 
     const cartRef = this.firebaseService.cartCollection.doc(cart.id);
 
     await cartRef.update({
       items: existingItems,
-      coinCount,
+      loyaltyProgramCoinsRewarded,
       totalPrice,
       deliveryCost,
       updatedAt: new Date(),

@@ -1,3 +1,5 @@
+import { CustomerAddress } from 'src/common/customer.model';
+
 export enum orderStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
@@ -43,20 +45,12 @@ export class Order {
   customerId: string;
   customerName: string;
   customerPhoneNumber: string;
-  customerAddress: {
-    street: string;
-    build: number;
-    local: string;
-    city: string;
-    state: string;
-    country: string;
-    postal_code: string;
-  };
+  customerAddress: CustomerAddress;
   orderedItems: OrderedItems[];
   orderStatus: orderStatus;
   currency: string;
   paymentStatus: paymentStatus;
   paymentMethodType: paymentMethod;
-  createdAt: any;
+  createdAt: Date;
   statusUpdates: Array<{ [key in orderStatus]?: Date | null }>;
 }

@@ -4,16 +4,20 @@ export class CartItem {
   productId: string;
   quantity: number;
   subTotalPrice: number;
+  totalDiscount: number;
+  totalWithDiscount: number;
 }
 
 export class Cart {
-  id: string;
+  id?: string;
   customerId: string;
   docRef: DocumentReference<DocumentData>;
   items: any[];
   totalPrice: number;
   deliveryCost: number;
-  coinCount: number;
+  loyaltyProgramCoinsRewarded: number;
+  loyaltyProgramCoinsSpent: number;
+  discount: number;
   paymentMethodType: string;
   orderType: string;
   createdAt: any;

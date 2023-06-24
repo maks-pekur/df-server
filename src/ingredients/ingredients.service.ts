@@ -71,13 +71,21 @@ export class IngredientsService {
     try {
       const snapshot: QuerySnapshot<DocumentData> =
         await this.firebaseService.ingredientsCollection.get();
+
+      const stopListDoc: DocumentSnapshot<DocumentData> =
+        await this.firebaseService.stopListCollection.doc('list').get();
+      const stopList = stopListDoc.data() ?? { toppingUUIDs: [] };
+
       const ingredients: DocumentData[] = [];
       snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        ingredients.push({ id: doc.id, ...doc.data() });
+        const ingredient = doc.data();
+        ingredient.isInStopList = stopList.toppingUUIDs.includes(doc.id);
+        ingredients.push({ id: doc.id, ...ingredient });
       });
+
       return ingredients;
     } catch (error) {
-      throw new BadRequestException('Ingredients not found');
+      throw error;
     }
   }
 
@@ -86,11 +94,19 @@ export class IngredientsService {
       const ingredientDoc: DocumentSnapshot<DocumentData> =
         await this.firebaseService.ingredientsCollection.doc(id).get();
       if (!ingredientDoc.exists) {
-        return null;
+        throw new NotFoundException('Ingredient not found');
       }
-      return ingredientDoc.data();
+      const ingredientData = ingredientDoc.data();
+
+      const stopListDoc: DocumentSnapshot<DocumentData> =
+        await this.firebaseService.stopListCollection.doc('list').get();
+      const stopList = stopListDoc.data() ?? { toppingUUIDs: [] };
+
+      ingredientData.isInStopList = stopList.toppingUUIDs.includes(id);
+
+      return ingredientData;
     } catch (error) {
-      throw new NotFoundException('Ingredient not found');
+      throw error;
     }
   }
 
@@ -164,26 +180,54 @@ export class IngredientsService {
     try {
       const ingredientRef: DocumentReference =
         this.firebaseService.ingredientsCollection.doc(id);
-      const ingredientSnapshot: DocumentSnapshot = await ingredientRef.get();
 
-      if (!ingredientSnapshot.exists) {
-        throw new NotFoundException('Ingredient not found');
-      }
+      const stopListRef = this.firebaseService.stopListCollection.doc('list');
 
-      const ingredientData: Ingredient =
-        ingredientSnapshot.data() as Ingredient;
-
-      const imageUrl = ingredientData.imageUrl;
-      const imagePath = this.firebaseService.getPathFromUrl(imageUrl);
-      try {
-        await this.firebaseService.deleteFileFromStorage(imagePath);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to delete file ${imagePath} from Firebase Storage. Error: ${error.message}`,
+      // Start transaction
+      await this.firebaseService.db.runTransaction(async (transaction) => {
+        // Get ingredient from Firestore
+        const ingredientSnapshot: DocumentSnapshot = await transaction.get(
+          ingredientRef,
         );
-      }
 
-      await ingredientRef.delete();
+        if (!ingredientSnapshot.exists) {
+          throw new NotFoundException('Ingredient not found');
+        }
+
+        // Get stopList from Firestore
+        const stopListSnapshot = await transaction.get(stopListRef);
+        let stopListData = null;
+        if (stopListSnapshot.exists) {
+          stopListData = stopListSnapshot.data();
+          if (stopListData.toppingUUIDs.includes(id)) {
+            stopListData.toppingUUIDs = stopListData.toppingUUIDs.filter(
+              (uuid) => uuid !== id,
+            );
+          }
+        }
+
+        const ingredientData: Ingredient =
+          ingredientSnapshot.data() as Ingredient;
+        const imageUrl = ingredientData.imageUrl;
+        const imagePath = this.firebaseService.getPathFromUrl(imageUrl);
+
+        // Delete image from Firebase Storage
+        try {
+          await this.firebaseService.deleteFileFromStorage(imagePath);
+        } catch (error) {
+          this.logger.warn(
+            `Failed to delete file ${imagePath} from Firebase Storage. Error: ${error.message}`,
+          );
+        }
+
+        // Delete ingredient from Firestore
+        transaction.delete(ingredientRef);
+
+        // Update stopList in Firestore
+        if (stopListData !== null) {
+          transaction.update(stopListRef, stopListData);
+        }
+      });
     } catch (error) {
       this.logger.error(error);
       throw new NotFoundException('Ingredient does not remove');

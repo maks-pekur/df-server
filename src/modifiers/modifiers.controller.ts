@@ -4,68 +4,46 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
+  Put,
 } from '@nestjs/common';
-import { CreateModifierDto } from './dto/create-modifire.dto';
-import { Modifier } from './entities/modifire.entity';
+import { CreateModifierDto } from './dto/create-modifier.dto';
+import { UpdateModifierDto } from './dto/update-modifier.dto';
 import { ModifiersService } from './modifiers.service';
 
 @Controller('modifiers')
 export class ModifiersController {
-  constructor(private readonly modifiersService: ModifiersService) {}
+  constructor(private modifiersService: ModifiersService) {}
 
-  // @Post('/groups')
-  // async createModifierGroup(
-  //   @Body() modifierGroup: ModifierGroup,
-  // ): Promise<string> {
-  //   return this.modifiersService.createModifierGroup(modifierGroup);
-  // }
-
-  // @Patch('/groups/:groupId')
-  // async updateModifierGroup(
-  //   @Param('groupId') groupId: string,
-  //   @Body() modifierGroup: Partial<ModifierGroup>,
-  // ): Promise<void> {
-  //   await this.modifiersService.updateModifierGroup(groupId, modifierGroup);
-  // }
-
-  // @Get('/groups/:groupId')
-  // async getModifierGroup(
-  //   @Param('groupId') groupId: string,
-  // ): Promise<ModifierGroup> {
-  //   return this.modifiersService.getModifierGroup(groupId);
-  // }
-
-  // @Delete('/groups/:groupId')
-  // async deleteModifierGroup(@Param('groupId') groupId: string): Promise<void> {
-  //   await this.modifiersService.deleteModifierGroup(groupId);
-  // }
-
-  @Post('/')
-  async createModifier(@Body() modifier: Modifier) {
-    await this.modifiersService.createModifier(modifier);
-    return { message: 'Modifier successfully created' };
-  }
-
-  @Patch('/:modifierId')
-  async updateModifier(
-    @Param('modifierId') modifierId: string,
-    @Body() body: CreateModifierDto,
-  ) {
-    await this.modifiersService.updateModifier(modifierId, body);
-    return { message: 'Modifier successfully updated' };
-  }
-
-  @Get('/:modifierId')
-  async getModifier(@Param('modifierId') modifierId: string) {
-    const modifier = await this.modifiersService.getModifier(modifierId);
+  @Post()
+  async create(@Body() createModifierDto: CreateModifierDto) {
+    const modifier = await this.modifiersService.createModifier(
+      createModifierDto,
+    );
     return modifier;
   }
 
-  @Delete('/:modifierId')
-  async deleteModifier(@Param('modifierId') modifierId: string) {
-    await this.modifiersService.deleteModifier(modifierId);
-    return { message: 'Modifier successfully removed' };
+  @Get(':id')
+  async getModifier(@Param('id') id: string) {
+    const modifier = await this.modifiersService.getModifier(id);
+    return modifier;
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateModifierDto: UpdateModifierDto,
+  ) {
+    const modifier = await this.modifiersService.updateModifier(
+      id,
+      updateModifierDto,
+    );
+    return modifier;
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    await this.modifiersService.removeModifier(id);
+    return { id };
   }
 }

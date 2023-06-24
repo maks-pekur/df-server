@@ -1,3 +1,4 @@
+import { CustomerAddress } from 'src/common/customer.model';
 import {
   OrderedItems,
   orderStatus,
@@ -12,15 +13,7 @@ export class CreateOrderDto {
   customerId: string;
   customerName: string;
   customerPhoneNumber: string;
-  customerAddress: {
-    street: string;
-    build: number;
-    local: string;
-    city: string;
-    state: string;
-    country: string;
-    postal_code: string;
-  };
+  customerAddress: CustomerAddress;
   orderedItems: OrderedItems[];
   orderStatus: orderStatus;
   currency: string;
