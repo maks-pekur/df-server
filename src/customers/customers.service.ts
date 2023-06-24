@@ -1,31 +1,46 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { DocumentData } from 'firebase-admin/firestore';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  DocumentData,
+  DocumentReference,
+  DocumentSnapshot,
+} from 'firebase-admin/firestore';
+import { Customer } from 'src/common/customer.model';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { v4 as uuidv4 } from 'uuid';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
 @Injectable()
 export class CustomersService {
-  constructor(private firebaseService: FirebaseService) {}
+  private readonly logger: Logger;
+  constructor(private firebaseService: FirebaseService) {
+    this.logger = new Logger(CustomersService.name);
+  }
 
-  async addCustomer(createCustomerDto: CreateCustomerDto) {
+  async addCustomer(createCustomerDto: CreateCustomerDto): Promise<Customer> {
     try {
-      const currentTime = new Date().toISOString();
-      const customerId = uuidv4();
+      const currentTime = new Date();
 
       const newCustomer = {
-        id: customerId,
         ...createCustomerDto,
         createdAt: currentTime,
         updatedAt: currentTime,
       };
 
-      await this.firebaseService.customersCollection
-        .doc(customerId)
-        .set(newCustomer);
+      const customerRef: DocumentReference =
+        this.firebaseService.customersCollection.doc();
+      await customerRef.set(newCustomer);
 
-      return newCustomer;
+      const customerSnapshot: DocumentSnapshot<DocumentData> =
+        await customerRef.get();
+
+      const customer: Customer = {
+        id: customerSnapshot.id,
+        createdAt: customerSnapshot.createTime.toDate(),
+        updatedAt: customerSnapshot.updateTime.toDate(),
+        ...createCustomerDto,
+      };
+
+      return customer;
     } catch (error) {
       throw new NotFoundException('Customers were not created');
     }

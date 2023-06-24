@@ -1,13 +1,15 @@
+import { DocumentReference } from 'firebase-admin/firestore';
+
 export class Product {
-  id: string;
+  id?: string;
   name: string;
   description?: string;
   imageUrl: string;
   extraIngredients?: string[];
-  price: number;
+  price: string;
   tags?: string[];
-  weight?: number;
-  categoryId: string;
+  measureUnitValue?: number;
+  categoryId: DocumentReference;
   measureUnit?: string;
   carbohydratesAmount?: number;
   fatAmount?: number;

@@ -1,58 +1,19 @@
-import {
-  IsArray,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { DocumentReference } from 'firebase-admin/firestore';
 
 export class CreateProductDto {
-  @IsString()
-  @IsNotEmpty()
   name: string;
-
-  @IsString()
-  @IsOptional()
   description?: string;
-
-  @IsNumber()
-  price: number;
-
-  @IsNotEmpty()
+  price: string;
   imageUrl: string;
-
-  @IsArray()
-  @IsOptional()
   extraIngredients?: string[];
-
-  @IsNumber()
-  @IsOptional()
   fatAmount?: number;
-
-  @IsNumber()
-  @IsOptional()
   proteinsAmount?: number;
-
-  @IsNumber()
-  @IsOptional()
   carbohydratesAmount?: number;
-
-  @IsNumber()
-  @IsOptional()
   energyAmount?: number;
-
-  @IsArray()
-  @IsOptional()
   tags?: string[];
-
-  @IsNumber()
-  @IsOptional()
-  weight?: number;
-
-  @IsNotEmpty()
-  categoryId: string;
-
-  @IsString()
-  @IsOptional()
+  measureUnitValue?: number;
+  categoryId: DocumentReference;
   measureUnit?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

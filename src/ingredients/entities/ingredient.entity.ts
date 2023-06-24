@@ -1,10 +1,12 @@
 export class Ingredient {
   id?: string;
-  title: string;
-  price: number;
+  name: string;
+  price: string;
   imageUrl: string;
   selected: boolean;
   groupId?: string[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export class IngredientGroup {

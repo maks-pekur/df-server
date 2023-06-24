@@ -19,13 +19,13 @@ export class StoriesController {
   constructor(private readonly storiesService: StoriesService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('imageUrl'))
+  @UseInterceptors(FileInterceptor('image'))
   async create(
     @UploadedFile() file: Express.Multer.File,
     @Body() createStoryDto: CreateStoryDto,
   ) {
-    await this.storiesService.create(file, createStoryDto);
-    return { message: 'Story successfully created' };
+    const story = await this.storiesService.createStory(file, createStoryDto);
+    return story;
   }
 
   @Get()
@@ -41,14 +41,14 @@ export class StoriesController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('imageUrl'))
+  @UseInterceptors(FileInterceptor('image'))
   async update(
     @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
     @Body() updateStoryDto: UpdateStoryDto,
   ) {
-    await this.storiesService.update(id, file, updateStoryDto);
-    return { message: 'Story successfully updated' };
+    const story = await this.storiesService.update(id, file, updateStoryDto);
+    return story;
   }
 
   @Delete(':id')

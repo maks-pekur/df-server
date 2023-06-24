@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -11,28 +12,29 @@ import {
   QuerySnapshot,
 } from 'firebase-admin/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { imageValidation } from 'src/utils/file-uploading.utils';
-import { v4 as uuidv4 } from 'uuid';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
 import { Ingredient } from './entities/ingredient.entity';
 
 @Injectable()
 export class IngredientsService {
-  constructor(private firebaseService: FirebaseService) {}
+  private readonly logger: Logger;
+  constructor(private firebaseService: FirebaseService) {
+    this.logger = new Logger(IngredientsService.name);
+  }
 
   async createIngredient(
     file: Express.Multer.File,
     createIngredientDto: CreateIngredientDto,
-  ): Promise<string> {
+  ): Promise<Ingredient> {
     try {
-      const isValidImage = imageValidation(file.mimetype);
-
-      if (!isValidImage) {
-        throw new NotFoundException('Invalid image format');
+      if (!file) {
+        throw new BadRequestException('Image file required');
       }
-
-      const imageUrl = await this.uploadImage(file);
+      const imageUrl = await this.firebaseService.uploadImage(
+        file,
+        'static/img/ingredients',
+      );
 
       const currentTime = new Date();
 
@@ -44,36 +46,25 @@ export class IngredientsService {
         ...createIngredientDto,
       };
 
-      await this.firebaseService.ingredientsCollection.add(ingredientData);
+      const ingredientRef: DocumentReference =
+        this.firebaseService.ingredientsCollection.doc();
+      await ingredientRef.set(ingredientData);
 
-      return 'Ingredient created successfully';
+      const ingredientSnapshot: DocumentSnapshot<DocumentData> =
+        await ingredientRef.get();
+
+      const ingredient: Ingredient = {
+        id: ingredientSnapshot.id,
+        createdAt: ingredientSnapshot.createTime.toDate(),
+        updatedAt: ingredientSnapshot.updateTime.toDate(),
+        ...ingredientData,
+      };
+
+      return ingredient;
     } catch (error) {
+      console.error(error);
       throw new BadRequestException('Ingredient was not created');
     }
-  }
-
-  async uploadImage(file: Express.Multer.File): Promise<string> {
-    const fileName = `${uuidv4()}.${file.originalname.split('.').pop()}`;
-
-    const storageRef = this.firebaseService.storage
-      .bucket()
-      .file(`images/ingredients/${fileName}`);
-
-    await storageRef.save(file.buffer, {
-      contentType: file.mimetype,
-      metadata: {
-        metadata: {
-          originalName: file.originalname,
-        },
-      },
-    });
-
-    const imageUrl = await storageRef.getSignedUrl({
-      action: 'read',
-      expires: '2030-01-01',
-    });
-
-    return imageUrl[0];
   }
 
   async getIngredients(): Promise<DocumentData[]> {
@@ -107,7 +98,7 @@ export class IngredientsService {
     id: string,
     file: Express.Multer.File,
     updateIngredientDto: UpdateIngredientDto,
-  ): Promise<DocumentData> {
+  ): Promise<Ingredient> {
     try {
       const ingredientRef: DocumentReference<DocumentData> =
         this.firebaseService.ingredientsCollection.doc(id);
@@ -121,13 +112,26 @@ export class IngredientsService {
         ingredientSnapshot.data() as Partial<Ingredient>;
 
       if (file) {
-        const isValidImage = imageValidation(file.mimetype);
-        if (!isValidImage) {
-          throw new Error('Invalid image format');
+        if (ingredientData.imageUrl) {
+          const oldImagePath = this.firebaseService.getPathFromUrl(
+            ingredientData.imageUrl,
+          );
+          try {
+            await this.firebaseService.deleteFileFromStorage(oldImagePath);
+          } catch (error) {
+            this.logger.warn(
+              `Failed to delete file ${oldImagePath} from Firebase Storage. Error: ${error.message}`,
+            );
+          }
         }
-        const imageUrl = await this.uploadImage(file);
+
+        const imageUrl = await this.firebaseService.uploadImage(
+          file,
+          'static/img/ingredients',
+        );
         ingredientData.imageUrl = imageUrl;
       }
+
       Object.assign(ingredientData, updateIngredientDto);
 
       const updatedData = {
@@ -137,19 +141,52 @@ export class IngredientsService {
 
       await ingredientRef.update(updatedData);
 
-      return updatedData;
+      const updatedIngredientSnapshot: DocumentSnapshot =
+        await ingredientRef.get();
+
+      const updatedIngredient: Ingredient = {
+        id: updatedIngredientSnapshot.id,
+        name: updatedIngredientSnapshot.get('name'),
+        imageUrl: updatedIngredientSnapshot.get('imageUrl'),
+        price: updatedIngredientSnapshot.get('price'),
+        createdAt: updatedIngredientSnapshot.createTime,
+        updatedAt: updatedIngredientSnapshot.updateTime,
+        ...updateIngredientDto,
+      };
+
+      return updatedIngredient;
     } catch (error) {
       throw new BadRequestException('Ingredient was not updated');
     }
   }
 
-  async deleteIngredient(id: string): Promise<void> {
+  async removeIngredient(id: string): Promise<void> {
     try {
-      const ingredientRef: DocumentReference<DocumentData> =
+      const ingredientRef: DocumentReference =
         this.firebaseService.ingredientsCollection.doc(id);
+      const ingredientSnapshot: DocumentSnapshot = await ingredientRef.get();
+
+      if (!ingredientSnapshot.exists) {
+        throw new NotFoundException('Ingredient not found');
+      }
+
+      const ingredientData: Ingredient =
+        ingredientSnapshot.data() as Ingredient;
+
+      const imageUrl = ingredientData.imageUrl;
+      const imagePath = this.firebaseService.getPathFromUrl(imageUrl);
+      try {
+        await this.firebaseService.deleteFileFromStorage(imagePath);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to delete file ${imagePath} from Firebase Storage. Error: ${error.message}`,
+        );
+      }
+
       await ingredientRef.delete();
     } catch (error) {
-      throw new BadRequestException('Ingredient was not deleted');
+      this.logger.error(error);
+      throw new NotFoundException('Ingredient does not remove');
     }
   }
 }

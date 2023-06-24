@@ -1,28 +1,9 @@
-import {
-  IsArray,
-  IsBoolean,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
-
 export class CreateIngredientDto {
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  price: number;
-
-  @IsNotEmpty()
-  imageUrl: string;
-
-  @IsBoolean()
+  name: string;
+  price: string;
   selected: boolean;
-
-  @IsArray()
-  @IsOptional()
+  imageUrl: string;
   groupId?: string[];
+  createdAt: Date;
+  updatedAt: Date;
 }

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -24,11 +25,15 @@ import {
 
 @Injectable()
 export class OrdersService {
+  private readonly logger: Logger;
+
   constructor(
     private firebaseService: FirebaseService,
     private customersService: CustomersService,
     private stripeService: StripeService,
-  ) {}
+  ) {
+    this.logger = new Logger(OrdersService.name);
+  }
 
   async createOrder(orderData: CreateOrderDto): Promise<Order> {
     try {

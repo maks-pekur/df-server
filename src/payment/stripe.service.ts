@@ -1,12 +1,18 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
+  private readonly logger: Logger;
 
   constructor(private configService: ConfigService) {
+    this.logger = new Logger(StripeService.name);
     this.stripe = new Stripe(
       this.configService.get<string>('STRIPE_SECRET_KEY'),
       {

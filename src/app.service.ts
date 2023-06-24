@@ -6,8 +6,8 @@ export class AppService {
     return {
       name: 'delivery food api ',
       version: '0.0.1',
-      description: 'An REST API with NESTJS and MONGODB',
-      author: 'Max Pekur',
+      description: 'An REST API with NESTJS and FIREBASE',
+      author: 'Maksym Pekur',
     };
   }
 }

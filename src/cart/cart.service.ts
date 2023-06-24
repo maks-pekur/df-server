@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DocumentData, DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { paymentMethod } from 'src/orders/entities/order.entity';
@@ -10,11 +10,14 @@ import { Cart } from './entities/cart.entity';
 
 @Injectable()
 export class CartService {
+  private readonly logger: Logger;
   constructor(
     private productsService: ProductsService,
     private firebaseService: FirebaseService,
     private promoCodeService: PromoCodesService,
-  ) {}
+  ) {
+    this.logger = new Logger(CartService.name);
+  }
 
   async getCartByCustomerId(customerId: string): Promise<Cart | null> {
     try {

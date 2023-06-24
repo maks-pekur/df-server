@@ -11,51 +11,56 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
-  @Post('/')
-  @UseInterceptors(FileInterceptor('imageUrl'))
-  async addProduct(
+  @Get('/')
+  async findAll() {
+    const products = await this.productService.getAllProducts();
+    return products;
+  }
+
+  @Get('/:id')
+  async findOne(@Param('id') id: string) {
+    const product = await this.productService.getOneProduct(id);
+    return product;
+  }
+
+  @Post('/add')
+  @UseInterceptors(FileInterceptor('image'))
+  async create(
     @UploadedFile() file: Express.Multer.File,
     @Body() createProductDto: CreateProductDto,
   ) {
-    const product = await this.productService.addProduct(
+    const product = await this.productService.createProduct(
       file,
       createProductDto,
     );
     return product;
   }
 
-  @Get('/')
-  async getProducts() {
-    const products = await this.productService.getAllProducts();
-    return products;
-  }
-
-  @Get('/:id')
-  async getProduct(@Param('id') id: string) {
-    const product = await this.productService.getOneProduct(id);
-    return product;
-  }
-
   @Patch('/:id')
   @UseInterceptors(FileInterceptor('image'))
-  async updateProduct(
+  async update(
     @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
-    @Body() body,
+    @Body() updateProductDto: UpdateProductDto,
   ) {
-    const product = await this.productService.updateProduct(id, file, body);
+    const product = await this.productService.updateProduct(
+      id,
+      file,
+      updateProductDto,
+    );
     return product;
   }
 
   @Delete('/:id')
-  async deleteProduct(@Param('id') id: string) {
-    await this.productService.deleteProduct(id);
+  async delete(@Param('id') id: string) {
+    await this.productService.removeProduct(id);
     return { message: 'Product successfully deleted' };
   }
 }
