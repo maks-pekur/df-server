@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -14,7 +15,7 @@ import {
 } from 'firebase-admin/firestore';
 import { CustomersService } from 'src/customers/customers.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { StripeService } from 'src/payment/stripe.service';
+import { IPaymentService } from 'src/payment/payment.interface';
 import { CreateOrderDto } from './dto/create-order.dto';
 import {
   Order,
@@ -30,7 +31,8 @@ export class OrdersService {
   constructor(
     private firebaseService: FirebaseService,
     private customersService: CustomersService,
-    private stripeService: StripeService,
+    @Inject('PAYMENT_SERVICE')
+    private paymentService: IPaymentService,
   ) {
     this.logger = new Logger(OrdersService.name);
   }
@@ -65,14 +67,12 @@ export class OrdersService {
         orderData.paymentMethodType === paymentMethod.BLIK ||
         orderData.paymentMethodType === paymentMethod.GOOGLE_PAY
       ) {
-        const paymentResult = await this.stripeService.processPayment({
+        const paymentResult = await this.paymentService.processPayment({
           currency: orderData.currency,
           paymentMethodType: orderData.paymentMethodType,
           amount: orderData.totalPrice,
-          metadata: {
-            orderNumber: orderNumber,
-            customerId: customer.id,
-          },
+          orderNumber: orderNumber,
+          customerId: customer.id,
         });
 
         if (paymentResult.status === paymentStatus.SUCCEEDED) {

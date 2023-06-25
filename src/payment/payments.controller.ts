@@ -1,13 +1,15 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { StripeService } from 'src/payment/stripe.service';
+import { Body, Controller, Inject, Post } from '@nestjs/common';
+import { IPaymentService } from './payment.interface';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly stripeService: StripeService) {}
+  constructor(
+    @Inject('PAYMENT_SERVICE') private readonly paymentService: IPaymentService,
+  ) {}
 
   @Post('/process')
   async processPayment(@Body() body: any) {
-    const paymentIntent = await this.stripeService.processPayment(body);
+    const paymentIntent = await this.paymentService.processPayment(body);
     return paymentIntent;
   }
 }

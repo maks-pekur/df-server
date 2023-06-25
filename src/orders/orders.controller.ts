@@ -25,15 +25,15 @@ export class OrdersController {
     return orders;
   }
 
-  @Get(':customerId')
-  async getOrdersByCustomer(@Param('customerId') customerId: string) {
-    const orders = await this.ordersService.getOrdersByCustomer(customerId);
-    return orders;
-  }
-
   @Get('order/:orderId')
   async getOrder(@Param('orderId') orderId: string) {
     const orders = await this.ordersService.getOrder(orderId);
+    return orders;
+  }
+
+  @Get(':customerId')
+  async getOrdersByCustomer(@Param('customerId') customerId: string) {
+    const orders = await this.ordersService.getOrdersByCustomer(customerId);
     return orders;
   }
 }
