@@ -1,60 +1,78 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { CreatePopularDto } from './dto/create-popular.dto';
 
 @Injectable()
 export class PopularsService {
   constructor(private firebaseService: FirebaseService) {}
 
-  async create(createPopularProductDto: CreatePopularDto) {
+  async add(productId: string) {
     try {
-      const docRef = await this.firebaseService.popularProductCollection.add(
-        createPopularProductDto,
-      );
-      return docRef.id;
+      const docRef = await this.firebaseService.popularProductCollection
+        .doc('items')
+        .get();
+      const data = docRef.data();
+      if (!data) {
+        await this.firebaseService.popularProductCollection
+          .doc('items')
+          .set({ products: [productId] });
+        return 'Product successfully added';
+      }
+      if (!data.products) data.products = [];
+
+      // Check if product already exists in array
+      if (data.products.includes(productId)) {
+        throw new ConflictException('Product already exists in popular list');
+      }
+
+      data.products.push(productId);
+      await this.firebaseService.popularProductCollection
+        .doc('items')
+        .set(data);
+      return 'Product successfully added';
     } catch (error) {
-      throw new BadRequestException('Product does not create');
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new BadRequestException('Product could not be added');
     }
   }
 
   async findAll() {
     try {
-      const snapshot =
-        await this.firebaseService.popularProductCollection.get();
-      const products = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      return products;
+      const docRef = await this.firebaseService.popularProductCollection
+        .doc('items')
+        .get();
+      const data = docRef.data();
+      if (!data) {
+        return [];
+      }
+      return data.products;
     } catch (error) {
       throw new NotFoundException('Products not found');
     }
   }
 
-  async findOne(id: string) {
+  async remove(productId: string) {
     try {
       const docRef = await this.firebaseService.popularProductCollection
-        .doc(id)
+        .doc('items')
         .get();
-      if (!docRef.exists) {
-        throw new NotFoundException('Product not found');
+      const data = docRef.data();
+      if (!data || !data.products.includes(productId)) {
+        throw new NotFoundException('Product does not exist in popular list');
       }
-      return { id: docRef.id, ...docRef.data() };
-    } catch (error) {
-      throw new NotFoundException('Product not found');
-    }
-  }
-
-  async remove(id: string) {
-    try {
-      await this.firebaseService.popularProductCollection.doc(id).delete();
+      data.products = data.products.filter((id) => id !== productId);
+      await this.firebaseService.popularProductCollection
+        .doc('items')
+        .set(data);
       return;
     } catch (error) {
-      throw new NotFoundException('Product does not remove');
+      throw new NotFoundException('Product could not be removed');
     }
   }
 }

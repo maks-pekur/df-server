@@ -1,4 +1,4 @@
-import { CustomerAddress } from 'src/common/customer.model';
+import { CustomerAddress } from 'src/customers/customer.model';
 import {
   OrderedItems,
   orderStatus,

@@ -100,7 +100,7 @@ export class StoriesService {
       const storySnapshot: DocumentSnapshot = await storyRef.get();
 
       if (!storySnapshot.exists) {
-        throw new NotFoundException('Ingredient not found');
+        throw new NotFoundException('Story not found');
       }
 
       const storyData: Partial<Story> = storySnapshot.data() as Partial<Story>;
@@ -147,7 +147,7 @@ export class StoriesService {
 
       return updatedStory;
     } catch (error) {
-      throw new BadRequestException('Ingredient was not updated');
+      throw new BadRequestException('Story was not updated');
     }
   }
 

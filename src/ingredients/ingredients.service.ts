@@ -8,18 +8,22 @@ import {
   DocumentData,
   DocumentReference,
   DocumentSnapshot,
-  QueryDocumentSnapshot,
   QuerySnapshot,
 } from 'firebase-admin/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { Restaurant } from 'src/restaurant/entities/restaurant.entity';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
 import { Ingredient } from './entities/ingredient.entity';
+import { IngredientGroupsService } from './ingredient-groups.service';
 
 @Injectable()
 export class IngredientsService {
   private readonly logger: Logger;
-  constructor(private firebaseService: FirebaseService) {
+  constructor(
+    private firebaseService: FirebaseService,
+    private ingredientGroupsService: IngredientGroupsService,
+  ) {
     this.logger = new Logger(IngredientsService.name);
   }
 
@@ -40,7 +44,7 @@ export class IngredientsService {
 
       const ingredientData = {
         imageUrl,
-        selected: false,
+        type: 'ingredient',
         createdAt: currentTime,
         updatedAt: currentTime,
         ...createIngredientDto,
@@ -67,21 +71,35 @@ export class IngredientsService {
     }
   }
 
-  async getIngredients(): Promise<DocumentData[]> {
+  async getIngredients(restaurantId?: string): Promise<Ingredient[]> {
     try {
-      const snapshot: QuerySnapshot<DocumentData> =
+      const ingredientSnapshot: QuerySnapshot<DocumentData> =
         await this.firebaseService.ingredientsCollection.get();
+      let ingredients: Ingredient[] = ingredientSnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as Ingredient),
+      );
 
-      const stopListDoc: DocumentSnapshot<DocumentData> =
-        await this.firebaseService.stopListCollection.doc('list').get();
-      const stopList = stopListDoc.data() ?? { toppingUUIDs: [] };
+      if (restaurantId) {
+        const restaurantDocRef =
+          this.firebaseService.restaurantsCollection.doc(restaurantId);
+        const restaurantDoc = await restaurantDocRef.get();
+        if (!restaurantDoc.exists) {
+          throw new NotFoundException('Restaurant not found');
+        }
+        const restaurant: Restaurant = restaurantDoc.data() as Restaurant;
 
-      const ingredients: DocumentData[] = [];
-      snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const ingredient = doc.data();
-        ingredient.isInStopList = stopList.toppingUUIDs.includes(doc.id);
-        ingredients.push({ id: doc.id, ...ingredient });
-      });
+        // Add isInStopList flag to each ingredient
+        ingredients = ingredients.map((ingredient) => ({
+          ...ingredient,
+          isInStopList: restaurant.stopLists.toppingUUIDs.includes(
+            ingredient.id,
+          ),
+        }));
+      }
 
       return ingredients;
     } catch (error) {
@@ -89,22 +107,43 @@ export class IngredientsService {
     }
   }
 
-  async getIngredient(id: string): Promise<DocumentData | null> {
+  async getIngredient(
+    id: string,
+    restaurantId?: string,
+  ): Promise<DocumentData | null> {
     try {
-      const ingredientDoc: DocumentSnapshot<DocumentData> =
-        await this.firebaseService.ingredientsCollection.doc(id).get();
-      if (!ingredientDoc.exists) {
+      const ingredientRef =
+        await this.firebaseService.ingredientsCollection.doc(id);
+      const ingredientSnapshot = await ingredientRef.get();
+
+      if (!ingredientSnapshot.exists) {
         throw new NotFoundException('Ingredient not found');
       }
-      const ingredientData = ingredientDoc.data();
+      const ingredient: Ingredient = {
+        id: ingredientSnapshot.id,
+        ...ingredientSnapshot.data(),
+      } as Ingredient;
 
-      const stopListDoc: DocumentSnapshot<DocumentData> =
-        await this.firebaseService.stopListCollection.doc('list').get();
-      const stopList = stopListDoc.data() ?? { toppingUUIDs: [] };
+      if (restaurantId) {
+        // Fetch the restaurant
+        const restaurantDocRef =
+          this.firebaseService.restaurantsCollection.doc(restaurantId);
+        const restaurantSnapshot = await restaurantDocRef.get();
+        if (!restaurantSnapshot.exists) {
+          throw new NotFoundException('Restaurant not found');
+        }
 
-      ingredientData.isInStopList = stopList.toppingUUIDs.includes(id);
+        const restaurant = restaurantSnapshot.data() as Restaurant;
 
-      return ingredientData;
+        // Check if the product is in the restaurant's stop list
+        if (restaurant.stopLists.toppingUUIDs.includes(id)) {
+          // Add the isInStopList flag to the product
+          ingredient.isInStopList = true;
+        } else {
+          ingredient.isInStopList = false;
+        }
+      }
+      return ingredient;
     } catch (error) {
       throw error;
     }
@@ -152,6 +191,7 @@ export class IngredientsService {
 
       const updatedData = {
         ...ingredientData,
+        ...updateIngredientDto,
         updatedAt: new Date(),
       };
 
@@ -161,7 +201,6 @@ export class IngredientsService {
         await ingredientRef.get();
 
       const updatedIngredient: Ingredient = {
-        id: updatedIngredientSnapshot.id,
         name: updatedIngredientSnapshot.get('name'),
         imageUrl: updatedIngredientSnapshot.get('imageUrl'),
         price: updatedIngredientSnapshot.get('price'),
@@ -177,60 +216,71 @@ export class IngredientsService {
   }
 
   async removeIngredient(id: string): Promise<void> {
-    try {
-      const ingredientRef: DocumentReference =
-        this.firebaseService.ingredientsCollection.doc(id);
+    await this.firebaseService.db.runTransaction(async (transaction) => {
+      const ingredientRef = this.firebaseService.ingredientsCollection.doc(id);
+      const ingredientSnapshot = await transaction.get(ingredientRef);
 
-      const stopListRef = this.firebaseService.stopListCollection.doc('list');
+      if (!ingredientSnapshot.exists) {
+        throw new NotFoundException('Ingredient not found');
+      }
 
-      // Start transaction
-      await this.firebaseService.db.runTransaction(async (transaction) => {
-        // Get ingredient from Firestore
-        const ingredientSnapshot: DocumentSnapshot = await transaction.get(
-          ingredientRef,
-        );
+      const ingredientData = ingredientSnapshot.data() as Ingredient;
 
-        if (!ingredientSnapshot.exists) {
-          throw new NotFoundException('Ingredient not found');
-        }
+      // Fetch all restaurants
+      const restaurantSnapshot = await transaction.get(
+        this.firebaseService.restaurantsCollection,
+      );
+      const restaurants: Restaurant[] = restaurantSnapshot.docs.map((doc) => {
+        const restaurantData = doc.data() as Restaurant;
+        return {
+          id: doc.id, // Get the document ID
+          ...restaurantData,
+        };
+      });
 
-        // Get stopList from Firestore
-        const stopListSnapshot = await transaction.get(stopListRef);
-        let stopListData = null;
-        if (stopListSnapshot.exists) {
-          stopListData = stopListSnapshot.data();
-          if (stopListData.toppingUUIDs.includes(id)) {
-            stopListData.toppingUUIDs = stopListData.toppingUUIDs.filter(
-              (uuid) => uuid !== id,
+      // Loop through each restaurant
+      for (const restaurant of restaurants) {
+        // Check if the ingredient is in the restaurant's stop list
+        if (restaurant.stopLists.toppingUUIDs.includes(id)) {
+          // Remove the ingredient from the stop list
+          restaurant.stopLists.toppingUUIDs =
+            restaurant.stopLists.toppingUUIDs.filter(
+              (ingredientId) => ingredientId !== id,
             );
+          if (!restaurant.id) {
+            throw new Error('Restaurant ID is not defined or empty');
           }
-        }
-
-        const ingredientData: Ingredient =
-          ingredientSnapshot.data() as Ingredient;
-        const imageUrl = ingredientData.imageUrl;
-        const imagePath = this.firebaseService.getPathFromUrl(imageUrl);
-
-        // Delete image from Firebase Storage
-        try {
-          await this.firebaseService.deleteFileFromStorage(imagePath);
-        } catch (error) {
-          this.logger.warn(
-            `Failed to delete file ${imagePath} from Firebase Storage. Error: ${error.message}`,
+          transaction.update(
+            this.firebaseService.restaurantsCollection.doc(restaurant.id),
+            { 'stopLists.toppingUUIDs': restaurant.stopLists.toppingUUIDs },
           );
         }
+      }
 
-        // Delete ingredient from Firestore
-        transaction.delete(ingredientRef);
+      // Fetch all ingredient groups
+      const ingredientGroups =
+        await this.ingredientGroupsService.getAllIngredientGroups();
 
-        // Update stopList in Firestore
-        if (stopListData !== null) {
-          transaction.update(stopListRef, stopListData);
+      // Loop through each group
+      for (const group of ingredientGroups) {
+        // Check if the ingredient is in the group
+        if (group.ingredientsIds.includes(id)) {
+          // Remove the ingredient from the group
+          await this.ingredientGroupsService.removeIngredientFromGroup(
+            group.id,
+            id,
+          );
         }
-      });
-    } catch (error) {
-      this.logger.error(error);
-      throw new NotFoundException('Ingredient does not remove');
-    }
+      }
+
+      // Delete ingredient image from storage if it exists
+      if (ingredientData.imageUrl) {
+        await this.firebaseService.deleteFileFromStorage(
+          ingredientData.imageUrl,
+        );
+      }
+      // Delete the ingredient
+      transaction.delete(ingredientRef);
+    });
   }
 }

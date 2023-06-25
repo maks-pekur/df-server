@@ -1,3 +1,3 @@
 export class Popular {
-  productId: string[];
+  productIds: string[];
 }

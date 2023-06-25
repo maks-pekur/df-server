@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { FirebaseService } from 'src/firebase/firebase.service';
-import { RestaurantController } from './restaurant.controller';
-import { RestaurantService } from './restaurant.service';
+import { RestaurantsController } from './restaurant.controller';
+import { RestaurantsService } from './restaurant.service';
 
 @Module({
   imports: [ConfigModule],
-  controllers: [RestaurantController],
-  providers: [RestaurantService, FirebaseService],
+  controllers: [RestaurantsController],
+  providers: [RestaurantsService, FirebaseService],
 })
 export class RestaurantModule {}

@@ -26,6 +26,28 @@ export class IngredientGroupController {
     );
   }
 
+  @Post('/add/:groupId')
+  addIngredientToGroup(
+    @Param('groupId') groupId: string,
+    @Body('ingredientId') ingredientId: string,
+  ): Promise<IngredientGroup> {
+    return this.ingredientGroupsService.addIngredientToGroup(
+      groupId,
+      ingredientId,
+    );
+  }
+
+  @Delete('/remove/:groupId/')
+  removeIngredientFromGroup(
+    @Param('groupId') groupId: string,
+    @Body('ingredientId') ingredientId: string,
+  ): Promise<IngredientGroup> {
+    return this.ingredientGroupsService.removeIngredientFromGroup(
+      groupId,
+      ingredientId,
+    );
+  }
+
   @Get()
   findAll(): Promise<IngredientGroup[]> {
     return this.ingredientGroupsService.getAllIngredientGroups();

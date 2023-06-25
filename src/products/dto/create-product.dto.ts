@@ -3,7 +3,7 @@ import { DocumentReference } from 'firebase-admin/firestore';
 export class CreateProductDto {
   name: string;
   description?: string;
-  price: string;
+  price: number;
   imageUrl: string;
   extraIngredients?: DocumentReference[];
   ingredientGroups?: DocumentReference[];
@@ -14,6 +14,7 @@ export class CreateProductDto {
   carbohydratesAmount?: number;
   energyAmount?: number;
   tags?: string[];
+  type: string;
   measureUnitValue?: number;
   categoryId: DocumentReference;
   measureUnit?: string;

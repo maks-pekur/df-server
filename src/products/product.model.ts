@@ -6,7 +6,7 @@ export class Product {
   description?: string;
   imageUrl: string;
   categoryId: DocumentReference;
-  price: string;
+  price: number;
   measureUnitValue?: number;
   measureUnit?: string;
   carbohydratesAmount?: number;
@@ -18,6 +18,8 @@ export class Product {
   removedIngredients?: DocumentReference[];
   modifierGroupsIds?: DocumentReference[];
   tags?: string[];
+  type: string;
+  isInStopList?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -19,14 +20,22 @@ export class IngredientsController {
   constructor(private readonly ingredientsService: IngredientsService) {}
 
   @Get()
-  async findAll() {
-    const ingredients = await this.ingredientsService.getIngredients();
+  async findAll(@Query('restaurantId') restaurantId: string) {
+    const ingredients = await this.ingredientsService.getIngredients(
+      restaurantId,
+    );
     return ingredients;
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const ingredient = await this.ingredientsService.getIngredient(id);
+  async findOne(
+    @Param('id') id: string,
+    @Query('restaurantId') restaurantId: string,
+  ) {
+    const ingredient = await this.ingredientsService.getIngredient(
+      id,
+      restaurantId,
+    );
     return ingredient;
   }
 

@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -19,14 +20,17 @@ export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
   @Get('/')
-  async findAll() {
-    const products = await this.productService.getAllProducts();
+  async findAll(@Query('restaurantId') restaurantId: string) {
+    const products = await this.productService.getAllProducts(restaurantId);
     return products;
   }
 
   @Get('/:id')
-  async findOne(@Param('id') id: string) {
-    const product = await this.productService.getOneProduct(id);
+  async findOne(
+    @Param('id') id: string,
+    @Query('restaurantId') restaurantId: string,
+  ) {
+    const product = await this.productService.getOneProduct(id, restaurantId);
     return product;
   }
 

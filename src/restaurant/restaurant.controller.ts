@@ -1,56 +1,41 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
+  NotFoundException,
   Param,
-  Patch,
   Post,
 } from '@nestjs/common';
+import { DocumentData } from 'firebase-admin/firestore';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
-import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
-import { RestaurantService } from './restaurant.service';
+import { Restaurant } from './entities/restaurant.entity';
+import { RestaurantsService } from './restaurant.service';
 
 @Controller('restaurants')
-export class RestaurantController {
-  constructor(private readonly restaurantService: RestaurantService) {}
+export class RestaurantsController {
+  constructor(private readonly restaurantsService: RestaurantsService) {}
 
-  @Get('/')
-  async getRestaurants() {
-    const restaurants = await this.restaurantService.getRestaurants();
-    return restaurants;
-  }
-
-  @Get('/:id')
-  async getRestaurant(@Param('id') id: string) {
-    const restaurant = await this.restaurantService.getRestaurant(id);
-    return restaurant;
-  }
-
-  @Post('/add')
-  async createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto) {
-    const restaurant = await this.restaurantService.createRestaurant(
+  @Post()
+  async createRestaurant(
+    @Body() createRestaurantDto: CreateRestaurantDto,
+  ): Promise<Restaurant> {
+    const restaurant = await this.restaurantsService.createRestaurant(
       createRestaurantDto,
     );
     return restaurant;
   }
 
-  @Patch('/:id')
-  async updateRestaurant(
-    @Param('id') id: string,
-    @Body() updateRestaurantDto: UpdateRestaurantDto,
-  ) {
-    const restaurant = await this.restaurantService.updateRestaurant(
-      id,
-      updateRestaurantDto,
-    );
-
-    return restaurant;
+  @Get('/')
+  async getAllRestaurants(): Promise<DocumentData[]> {
+    return this.restaurantsService.getAllRestaurants();
   }
 
-  @Delete('/:id')
-  async deleteRestaurant(@Param('id') id: string) {
-    const restaurant = await this.restaurantService.deleteRestaurant(id);
+  @Get('/:id')
+  async getOneRestaurant(@Param('id') id: string): Promise<DocumentData> {
+    const restaurant = await this.restaurantsService.getOneRestaurant(id);
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
     return restaurant;
   }
 }

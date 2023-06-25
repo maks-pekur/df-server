@@ -1,23 +1,35 @@
-import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
-import { StopListItemDto } from './dto/stop-list-item.dto';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { StopList } from './entities/stop-list.entity';
 import { StopListService } from './stop-list.service';
 
 @Controller('stop-list')
 export class StopListController {
   constructor(private readonly stopListService: StopListService) {}
 
-  @Post()
-  async addToStopList(@Body() stopListItemDto: StopListItemDto) {
-    return this.stopListService.addToStopList(stopListItemDto);
+  @Post('/:restaurantId')
+  async addToStopList(
+    @Param('restaurantId') restaurantId: string,
+    @Body('itemId') itemId: string,
+  ): Promise<void> {
+    return this.stopListService.addToStopList(restaurantId, itemId);
   }
 
-  @Delete()
-  async removeFromStopList(@Body() stopListItemDto: StopListItemDto) {
-    return this.stopListService.removeFromStopList(stopListItemDto);
+  @Delete('/:restaurantId')
+  async removeFromStopList(
+    @Param('restaurantId') restaurantId: string,
+    @Body('itemId') itemId: string,
+  ): Promise<{ message: string }> {
+    const message = await this.stopListService.removeFromStopList(
+      restaurantId,
+      itemId,
+    );
+    return { message };
   }
 
-  @Get()
-  async getStopList() {
-    return this.stopListService.getStopList();
+  @Get('/:restaurantId')
+  async getStopList(
+    @Param('restaurantId') restaurantId: string,
+  ): Promise<StopList> {
+    return this.stopListService.getStopList(restaurantId);
   }
 }

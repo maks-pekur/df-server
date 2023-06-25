@@ -4,7 +4,7 @@ import {
   DocumentReference,
   DocumentSnapshot,
 } from 'firebase-admin/firestore';
-import { Customer } from 'src/common/customer.model';
+import { Customer } from 'src/customers/customer.model';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';

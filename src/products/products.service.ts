@@ -8,72 +8,83 @@ import {
   DocumentData,
   DocumentReference,
   DocumentSnapshot,
-  QueryDocumentSnapshot,
-  QuerySnapshot,
 } from 'firebase-admin/firestore';
-import { CategoriesService } from 'src/categories/categories.service';
-import { Product } from 'src/common/product.model';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { Product } from 'src/products/product.model';
+import { Restaurant } from 'src/restaurant/entities/restaurant.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
   private readonly logger: Logger;
-  constructor(
-    private firebaseService: FirebaseService,
-    private categoriesService: CategoriesService,
-  ) {
+  constructor(private readonly firebaseService: FirebaseService) {
     this.logger = new Logger(ProductsService.name);
   }
 
-  async getAllProducts(): Promise<DocumentData[]> {
-    try {
-      const snapshot: QuerySnapshot<DocumentData> =
-        await this.firebaseService.productsCollection.get();
+  async getAllProducts(restaurantId?: string): Promise<Product[]> {
+    const productSnapshot = await this.firebaseService.productsCollection.get();
+    let products: Product[] = productSnapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        } as Product),
+    );
 
-      const stopListDoc = await this.firebaseService.stopListCollection
-        .doc('list')
-        .get();
+    if (restaurantId) {
+      const restaurantDocRef =
+        this.firebaseService.restaurantsCollection.doc(restaurantId);
+      const restaurantDoc = await restaurantDocRef.get();
+      if (!restaurantDoc.exists) {
+        throw new NotFoundException('Restaurant not found');
+      }
+      const restaurant: Restaurant = restaurantDoc.data() as Restaurant;
 
-      const stopList = stopListDoc.data();
-      const products: DocumentData[] = [];
-
-      snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const product = doc.data();
-        product.isInStopList =
-          stopList && stopList.productUUIDs.includes(doc.id);
-        products.push({ id: doc.id, ...product });
-      });
-      return products;
-    } catch (error) {
-      this.logger.error(error);
-      throw new NotFoundException('Products not found');
+      // Add isInStopList flag to each product
+      products = products.map((product) => ({
+        ...product,
+        isInStopList: restaurant.stopLists.productUUIDs.includes(product.id),
+      }));
     }
+
+    return products;
   }
 
-  async getOneProduct(id: string): Promise<DocumentData | null> {
-    try {
-      const productDoc: DocumentSnapshot<DocumentData> =
-        await this.firebaseService.productsCollection.doc(id).get();
-      if (!productDoc.exists) {
-        return null;
-      }
-      const productData = productDoc.data();
+  async getOneProduct(id: string, restaurantId?: string): Promise<Product> {
+    const productRef = this.firebaseService.productsCollection.doc(id);
+    const productSnapshot = await productRef.get();
 
-      const stopListDoc: DocumentSnapshot<DocumentData> =
-        await this.firebaseService.stopListCollection.doc('list').get();
-      if (!stopListDoc.exists) {
-        throw new NotFoundException('StopList not found');
-      }
-      const stopList = stopListDoc.data();
-
-      productData.isInStopList = stopList && stopList.productUUIDs.includes(id);
-      return productData;
-    } catch (error) {
-      this.logger.error(error);
+    if (!productSnapshot.exists) {
       throw new NotFoundException('Product not found');
     }
+
+    const product: Product = {
+      id: productSnapshot.id,
+      ...productSnapshot.data(),
+    } as Product;
+
+    if (restaurantId) {
+      // Fetch the restaurant
+      const restaurantDocRef =
+        this.firebaseService.restaurantsCollection.doc(restaurantId);
+      const restaurantSnapshot = await restaurantDocRef.get();
+      if (!restaurantSnapshot.exists) {
+        throw new NotFoundException('Restaurant not found');
+      }
+
+      const restaurant = restaurantSnapshot.data() as Restaurant;
+
+      // Check if the product is in the restaurant's stop list
+      if (restaurant.stopLists.productUUIDs.includes(id)) {
+        // Add the isInStopList flag to the product
+        product.isInStopList = true;
+      } else {
+        product.isInStopList = false;
+      }
+    }
+
+    return product;
   }
 
   async createProduct(
@@ -102,6 +113,7 @@ export class ProductsService {
       const currentTime = new Date();
       const productData = {
         imageUrl,
+        type: 'product',
         categoryId: categoryRef,
         createdAt: currentTime,
         updatedAt: currentTime,
@@ -209,59 +221,75 @@ export class ProductsService {
   }
 
   async removeProduct(id: string): Promise<void> {
-    try {
-      const productRef: DocumentReference =
-        this.firebaseService.productsCollection.doc(id);
+    await this.firebaseService.db.runTransaction(async (transaction) => {
+      const productRef = this.firebaseService.productsCollection.doc(id);
+      const productSnapshot = await transaction.get(productRef);
 
-      const stopListRef = this.firebaseService.stopListCollection.doc('list');
+      if (!productSnapshot.exists) {
+        throw new NotFoundException('Product not found');
+      }
 
-      // Start transaction
-      await this.firebaseService.db.runTransaction(async (transaction) => {
-        // Get product from Firestore
-        const productSnapshot: DocumentSnapshot = await transaction.get(
-          productRef,
+      const productData: Product = productSnapshot.data() as Product;
+
+      const imageUrl = productData.imageUrl;
+      const imagePath = this.firebaseService.getPathFromUrl(imageUrl);
+      try {
+        await this.firebaseService.deleteFileFromStorage(imagePath);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to delete file ${imagePath} from Firebase Storage. Error: ${error.message}`,
         );
+      }
 
-        if (!productSnapshot.exists) {
-          throw new NotFoundException('Product not found');
-        }
+      // Fetch all restaurants
+      const restaurantSnapshot = await transaction.get(
+        this.firebaseService.restaurantsCollection,
+      );
+      const restaurants: Restaurant[] = restaurantSnapshot.docs.map((doc) => {
+        const restaurantData = doc.data() as Restaurant;
+        return {
+          id: doc.id, // Get the document ID
+          ...restaurantData,
+        };
+      });
 
-        // Get stopList from Firestore
-        const stopListSnapshot = await transaction.get(stopListRef);
-        let stopListData = null;
-        if (stopListSnapshot.exists) {
-          stopListData = stopListSnapshot.data();
-          if (stopListData.productUUIDs.includes(id)) {
-            stopListData.productUUIDs = stopListData.productUUIDs.filter(
-              (uuid) => uuid !== id,
+      // Fetch popular products
+      const popularProductsSnapshot = await transaction.get(
+        this.firebaseService.popularProductCollection.doc('items'),
+      );
+      const popularProductsData = popularProductsSnapshot.data();
+
+      // Check and remove product from popular list
+      if (popularProductsData && popularProductsData.products.includes(id)) {
+        popularProductsData.products = popularProductsData.products.filter(
+          (productId) => productId !== id,
+        );
+        transaction.update(
+          this.firebaseService.popularProductCollection.doc('items'),
+          { products: popularProductsData.products },
+        );
+      }
+
+      // Loop through each restaurant
+      for (const restaurant of restaurants) {
+        // Check if the product is in the restaurant's stop list
+        if (restaurant.stopLists.productUUIDs.includes(id)) {
+          // Remove the product from the stop list
+          restaurant.stopLists.productUUIDs =
+            restaurant.stopLists.productUUIDs.filter(
+              (productId) => productId !== id,
             );
+          if (!restaurant.id) {
+            throw new Error('Restaurant ID is not defined or empty');
           }
-        }
-
-        const productData: Product = productSnapshot.data() as Product;
-        const imageUrl = productData.imageUrl;
-        const imagePath = this.firebaseService.getPathFromUrl(imageUrl);
-
-        // Delete image from Firebase Storage
-        try {
-          await this.firebaseService.deleteFileFromStorage(imagePath);
-        } catch (error) {
-          this.logger.warn(
-            `Failed to delete file ${imagePath} from Firebase Storage. Error: ${error.message}`,
+          transaction.update(
+            this.firebaseService.restaurantsCollection.doc(restaurant.id),
+            { 'stopLists.productUUIDs': restaurant.stopLists.productUUIDs },
           );
         }
-
-        // Delete product from Firestore
-        transaction.delete(productRef);
-
-        // Update stopList in Firestore
-        if (stopListData !== null) {
-          transaction.update(stopListRef, stopListData);
-        }
-      });
-    } catch (error) {
-      this.logger.error(error);
-      throw new NotFoundException('Product does not remove');
-    }
+      }
+      // Delete the product
+      transaction.delete(productRef);
+    });
   }
 }

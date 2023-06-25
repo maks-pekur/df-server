@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { DocumentData, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { CreateIngredientGroupDto } from './dto/create-ingredient-group.dto';
@@ -32,6 +37,88 @@ export class IngredientGroupsService {
       id: ingredientGroup.id,
       ...ingredientGroup.data(),
     } as IngredientGroup;
+  }
+
+  async addIngredientToGroup(
+    groupId: string,
+    ingredientId: string,
+  ): Promise<IngredientGroup> {
+    const ingredientRef =
+      this.firebaseService.ingredientsCollection.doc(ingredientId);
+    const ingredientSnapshot = await ingredientRef.get();
+
+    if (!ingredientSnapshot.exists) {
+      throw new NotFoundException(
+        `Ingredient with id ${ingredientId} not found`,
+      );
+    }
+
+    const groupRef =
+      this.firebaseService.ingredientGroupsCollection.doc(groupId);
+    const groupSnapshot = await groupRef.get();
+
+    if (!groupSnapshot.exists) {
+      throw new NotFoundException('Ingredient Group not found');
+    }
+
+    const group = groupSnapshot.data() as IngredientGroup;
+    group.id = groupSnapshot.id;
+
+    // Check if the ingredient is already in the group
+    if (group.ingredientsIds?.includes(ingredientId)) {
+      throw new BadRequestException('Ingredient already in the group');
+    }
+
+    // Add the ingredient to the group
+    if (group.ingredientsIds) {
+      group.ingredientsIds.push(ingredientId);
+    } else {
+      group.ingredientsIds = [ingredientId];
+    }
+
+    await groupRef.update({ ingredientsIds: group.ingredientsIds });
+
+    return group;
+  }
+
+  async removeIngredientFromGroup(
+    groupId: string,
+    ingredientId: string,
+  ): Promise<IngredientGroup> {
+    const ingredientRef =
+      this.firebaseService.ingredientsCollection.doc(ingredientId);
+    const ingredientSnapshot = await ingredientRef.get();
+
+    if (!ingredientSnapshot.exists) {
+      throw new NotFoundException(
+        `Ingredient with id ${ingredientId} not found`,
+      );
+    }
+
+    const groupRef =
+      this.firebaseService.ingredientGroupsCollection.doc(groupId);
+    const groupSnapshot = await groupRef.get();
+
+    if (!groupSnapshot.exists) {
+      throw new NotFoundException('Ingredient Group not found');
+    }
+
+    const group = groupSnapshot.data() as IngredientGroup;
+    group.id = groupSnapshot.id;
+
+    // Check if the ingredient is not in the group
+    if (!group.ingredientsIds?.includes(ingredientId)) {
+      throw new BadRequestException('Ingredient is not in the group');
+    }
+
+    // Remove the ingredient from the group
+    group.ingredientsIds = group.ingredientsIds.filter(
+      (id) => id !== ingredientId,
+    );
+
+    await groupRef.update({ ingredientsIds: group.ingredientsIds });
+
+    return group;
   }
 
   async getAllIngredientGroups(): Promise<IngredientGroup[]> {

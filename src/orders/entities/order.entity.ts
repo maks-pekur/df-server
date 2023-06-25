@@ -1,4 +1,4 @@
-import { CustomerAddress } from 'src/common/customer.model';
+import { CustomerAddress } from 'src/customers/customer.model';
 
 export enum orderStatus {
   PENDING = 'pending',
