@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { credential } from 'firebase-admin';
 import { App, initializeApp } from 'firebase-admin/app';
-import { Auth, getAuth } from 'firebase-admin/auth';
 import {
   CollectionReference,
   Firestore,
@@ -17,7 +16,7 @@ export class FirebaseService {
   private readonly logger: Logger;
   private static initialized = false;
   public readonly app: App;
-  public readonly auth: Auth;
+  // public readonly auth: Auth;
   public readonly db: Firestore;
   public readonly storage: Storage;
 
@@ -54,7 +53,7 @@ export class FirebaseService {
       FirebaseService.initialized = true;
     }
 
-    this.auth = getAuth(this.app);
+    // this.auth = getAuth(this.app);
     this.db = getFirestore(this.app);
     this.storage = getStorage(this.app);
 
