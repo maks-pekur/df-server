@@ -53,21 +53,29 @@ export class StripeService implements IPaymentService {
       customerId,
       blikCode,
     } = data;
+
     if (!['card', 'blik', 'apple_pay', 'google_pay'].includes(paymentMethod)) {
+      this.logger.warn(
+        `Unsupported payment method ${paymentMethod} attempted for order ${orderNumber}`,
+      );
       throw new Error('Unsupported payment method');
     }
+
+    this.logger.log(
+      `Processing payment for order ${orderNumber} with method ${paymentMethod}`,
+    );
 
     const paymentIntentData: Stripe.PaymentIntentCreateParams = {
       amount: this._convertToMinorUnit(amount, currency),
       currency: currency || 'usd',
-      description: `Оплата заказа ${orderNumber}`,
+      description: `Payment for order ${orderNumber}`,
       payment_method_types: [paymentMethod],
       metadata: {
         customer: customerId,
       },
     };
 
-    // Если используется BLIK, добавляем код BLIK
+    // If Blik is used, add Blik code
     if (paymentMethod === 'blik') {
       paymentIntentData.payment_method_data = {
         type: 'blik',
@@ -75,21 +83,45 @@ export class StripeService implements IPaymentService {
           code: blikCode,
         },
       };
+      this.logger.log(`Blik code added for payment for order ${orderNumber}`);
     } else {
-      // Для других методов оплаты используем payment_method_id
+      // For other payment methods use payment_method_id
       paymentIntentData.payment_method = paymentMethodId;
       paymentIntentData.confirm = true;
+      this.logger.log(
+        `Payment method ID added for payment for order ${orderNumber}`,
+      );
     }
 
     try {
       const paymentIntent = await this.stripe.paymentIntents.create(
         paymentIntentData,
       );
-
+      this.logger.log(`Payment for order ${orderNumber} has been processed`);
       return paymentIntent;
     } catch (err) {
       this.logger.error(
         `Error processing payment for order ${orderNumber}: ${err.message}`,
+      );
+      throw err;
+    }
+  }
+
+  async refundPayment(paymentIntentId: string): Promise<any> {
+    this.logger.log(`Processing refund for payment intent ${paymentIntentId}`);
+
+    try {
+      const refund = await this.stripe.refunds.create({
+        payment_intent: paymentIntentId,
+      });
+      this.logger.log(
+        `Refund for payment intent ${paymentIntentId} has been processed`,
+      );
+
+      return refund;
+    } catch (err) {
+      this.logger.error(
+        `Error refunding payment for payment intent ${paymentIntentId}: ${err.message}`,
       );
       throw err;
     }
