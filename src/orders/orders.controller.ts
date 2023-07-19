@@ -1,39 +1,40 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CreateOrderDto } from './dto/create-order.dto';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Post('/create')
-  async createOrder(@Body() orderData: any) {
-    const createdOrder = await this.ordersService.createOrder(orderData);
-    return createdOrder;
+  @Post('/')
+  async createOrder(@Body() orderData: CreateOrderDto) {
+    const order = await this.ordersService.createOrder(orderData);
+    return order;
   }
 
-  @Post(':orderId/status')
-  async updateOrderStatus(
-    @Param('orderId') orderId: string,
-    @Body('status') status: string,
-  ): Promise<void> {
-    await this.ordersService.updateOrderStatus(orderId, status);
-  }
-
-  @Get()
-  async getOrders() {
-    const orders = await this.ordersService.getOrders();
+  @Get('/')
+  async getAllOrders() {
+    const orders = await this.ordersService.getAllOrders();
     return orders;
   }
 
-  @Get('order/:orderId')
+  @Get('/:storeId')
+  async getOrdersByStore(@Param('storeId') storeId: string) {
+    const orders = await this.ordersService.getOrdersByStore(storeId);
+    return orders;
+  }
+
+  @Get('/order/:orderId')
   async getOrder(@Param('orderId') orderId: string) {
     const orders = await this.ordersService.getOrder(orderId);
     return orders;
   }
 
-  @Get(':customerId')
-  async getOrdersByCustomer(@Param('customerId') customerId: string) {
-    const orders = await this.ordersService.getOrdersByCustomer(customerId);
-    return orders;
+  @Post('/:orderId/status')
+  async updateOrderStatus(
+    @Param('orderId') orderId: string,
+    @Body('status') status: string,
+  ): Promise<void> {
+    await this.ordersService.updateOrderStatus(orderId, status);
   }
 }

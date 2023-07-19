@@ -1,24 +1,19 @@
-import { CustomerAddress } from 'src/customers/customer.model';
 import {
-  OrderedItems,
+  orderItem,
   orderStatus,
   orderType,
   paymentMethod,
   paymentStatus,
-} from '../entities/order.entity';
+} from 'src/types';
 
 export class CreateOrderDto {
-  orderNumber: string;
-  orderType: orderType;
   customerId: string;
-  customerName: string;
-  customerPhoneNumber: string;
-  customerAddress: CustomerAddress;
-  orderedItems: OrderedItems[];
-  orderStatus: orderStatus;
-  currency: string;
-  paymentStatus: paymentStatus;
+  storeId: string;
+  orderType: orderType;
   paymentMethodType: paymentMethod;
   totalPrice: number;
-  createdAt: Date;
+  orderItems: orderItem[];
+  orderNumber: string;
+  orderStatus: orderStatus;
+  paymentStatus: paymentStatus;
 }

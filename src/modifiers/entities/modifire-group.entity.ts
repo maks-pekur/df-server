@@ -2,26 +2,25 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Modifier } from './modifire.entity';
 
 @Entity()
-export class PromoCode {
+export class ModifierGroup {
   @PrimaryGeneratedColumn()
   id: string;
 
   @Column()
-  code: string;
-
-  @Column()
-  discount: number;
-
-  @Column()
-  expiresAt: Date;
+  name: string;
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(() => Modifier, (modifier) => modifier.group)
+  modifiers: Modifier[];
 
   @UpdateDateColumn()
   updatedAt: Date;

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -13,14 +14,27 @@ import { PaymentsModule } from './payment/payments.module';
 import { PopularsModule } from './populars/populars.module';
 import { ProductsModule } from './products/products.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
-import { RestaurantModule } from './restaurant/restaurant.module';
-import { StopListModule } from './stop-list/stop-list.module';
+import { StoreModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('DB_HOST'),
+        port: configService.get('DB_PORT'),
+        username: configService.get('DB_USERNAME'),
+        password: configService.get('DB_PASSWORD'),
+        database: configService.get('DB_NAME'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true,
+      }),
+      inject: [ConfigService],
     }),
     ProductsModule,
     CategoriesModule,
@@ -30,12 +44,11 @@ import { StoriesModule } from './stories/stories.module';
     OrdersModule,
     PaymentsModule,
     PromoCodesModule,
-    RestaurantModule,
+    StoreModule,
     IngredientsModule,
     ModifiersModule,
     CustomersModule,
     AuthModule,
-    StopListModule,
   ],
   controllers: [AppController],
   providers: [AppService],

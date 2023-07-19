@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Story } from './entities/story.entity';
 import { StoriesController } from './stories.controller';
 import { StoriesService } from './stories.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [TypeOrmModule.forFeature([Story])],
   controllers: [StoriesController],
-  providers: [StoriesService, FirebaseService],
+  providers: [StoriesService],
 })
 export class StoriesModule {}

@@ -40,7 +40,7 @@ export class CartController {
 
   @Delete('/')
   async removeItemFromCart(@Body() body) {
-    await this.cartService.removeItemFromCart(body);
+    await this.cartService.removeItemFromCart();
     return { message: 'Item successfully removed from cart' };
   }
 

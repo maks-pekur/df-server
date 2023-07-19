@@ -15,7 +15,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
-  @Post('/add')
+  @Post('/')
   create(@Body() createCategoryDto: CreateCategoryDto) {
     const category = this.categoriesService.createCategory(createCategoryDto);
     return category;

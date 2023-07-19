@@ -1,8 +1,10 @@
-import { DocumentReference } from 'firebase-admin/firestore';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateIngredientGroupDto {
+  @IsString()
+  @IsNotEmpty()
   name: string;
-  ingredientsIds?: DocumentReference[];
-  createdAt: Date;
-  updatedAt: Date;
+
+  @IsString()
+  ingredientsIds: string[];
 }

@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { FirebaseService } from 'src/firebase/firebase.service';
 import { LiqPayService } from './liqpay.service';
 import { PaymentsController } from './payments.controller';
 import { StripeService } from './stripe.service';
@@ -9,7 +8,6 @@ import { StripeService } from './stripe.service';
   imports: [ConfigModule],
   controllers: [PaymentsController],
   providers: [
-    FirebaseService,
     StripeService,
     LiqPayService,
     {

@@ -1,56 +1,47 @@
-import { CustomerAddress } from 'src/customers/customer.model';
+import { Customer } from 'src/customers/entities/customer.entity';
+import { Store } from 'src/stores/entities/store.entity';
+import {
+  orderStatus,
+  orderType,
+  paymentMethod,
+  paymentStatus,
+} from 'src/types';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-export enum orderStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  PREPARING = 'preparing',
-  READY = 'ready',
-  DELIVERED = 'delivered',
-  COMPLETED = 'completed',
-  CANCELED = 'canceled',
-}
-
-export enum paymentStatus {
-  PENDING = 'pending',
-  PAID = 'paid',
-  FAILED = 'failed',
-  SUCCEEDED = 'succeeded',
-}
-
-export enum paymentMethod {
-  CASH = 'cash',
-  CART_ON_DELIVERY = 'card_on_delivery',
-  CARD = 'card',
-  BLIK = 'blik',
-  APPLE_PAY = 'apple_pay',
-  GOOGLE_PAY = 'google_pay',
-}
-
-export enum orderType {
-  DELIVERY = 'delivery',
-  TAKE_AWAY = 'takeaway',
-  INSIDE = 'inside',
-}
-
-export class OrderedItems {
-  name: string;
-  quantity: number;
-  price: number;
-  subTotalPrice: number;
-}
-
+@Entity()
 export class Order {
-  orderNumber: string;
-  orderType: orderType;
+  @PrimaryGeneratedColumn()
+  id: string;
+
+  @OneToOne(() => Customer, (customer) => customer.orders)
   customerId: string;
-  customerName: string;
-  customerPhoneNumber: string;
-  customerAddress: CustomerAddress;
-  orderedItems: OrderedItems[];
+
+  @OneToOne(() => Store)
+  storeId: string;
+
+  @Column()
+  orderNumber: string;
+
+  @Column()
+  orderType: orderType;
+
+  @Column()
   orderStatus: orderStatus;
-  currency: string;
+
+  @Column()
   paymentStatus: paymentStatus;
+
+  @Column()
   paymentMethodType: paymentMethod;
+
+  @CreateDateColumn()
   createdAt: Date;
+
   statusUpdates: Array<{ [key in orderStatus]?: Date | null }>;
 }

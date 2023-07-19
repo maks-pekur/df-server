@@ -1,103 +1,80 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  DocumentData,
-  DocumentReference,
-  DocumentSnapshot,
-  FieldValue,
-  QueryDocumentSnapshot,
-  QuerySnapshot,
-} from 'firebase-admin/firestore';
-import { CustomersService } from 'src/customers/customers.service';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { IPaymentService } from 'src/payment/payment.interface';
 import { CreateOrderDto } from './dto/create-order.dto';
-import {
-  Order,
-  orderStatus,
-  paymentMethod,
-  paymentStatus,
-} from './entities/order.entity';
+import { Order } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
   private readonly logger: Logger;
 
   constructor(
-    private firebaseService: FirebaseService,
-    private customersService: CustomersService,
     @Inject('PAYMENT_SERVICE')
     private paymentService: IPaymentService,
   ) {
     this.logger = new Logger(OrdersService.name);
   }
 
-  async createOrder(orderData: CreateOrderDto): Promise<Order> {
-    try {
-      const orderNumber = this.generateOrderNumber();
-
-      const { customerId } = orderData;
-      const customer = await this.customersService.getCustomer(customerId);
-
-      if (!customer) {
-        throw new NotFoundException('Customer not found');
-      }
-
-      const currentTime = new Date();
-
-      const newOrder: Order = {
-        orderNumber,
-        customerName: customer.name || null,
-        customerPhoneNumber: customer.phoneNumber,
-        orderStatus: orderStatus.PENDING,
-        statusUpdates: [{ [orderStatus.PENDING]: currentTime }],
-        paymentStatus: paymentStatus.PENDING,
-        createdAt: currentTime,
-        ...orderData,
-      };
-
-      if (
-        orderData.paymentMethodType === paymentMethod.CARD ||
-        orderData.paymentMethodType === paymentMethod.APPLE_PAY ||
-        orderData.paymentMethodType === paymentMethod.BLIK ||
-        orderData.paymentMethodType === paymentMethod.GOOGLE_PAY
-      ) {
-        const paymentResult = await this.paymentService.processPayment({
-          currency: orderData.currency,
-          paymentMethodType: orderData.paymentMethodType,
-          amount: orderData.totalPrice,
-          orderNumber: orderNumber,
-          customerId: customer.id,
-        });
-
-        if (paymentResult.status === paymentStatus.SUCCEEDED) {
-          newOrder.paymentStatus = paymentStatus.PAID;
-        } else {
-          throw new Error('Payment failed');
-        }
-
-        await this.saveOrder(newOrder);
-        return newOrder;
-      }
-
-      await this.saveOrder(newOrder);
-      return newOrder;
-    } catch (error) {
-      throw new BadRequestException('Order not saved');
-    }
+  async createOrder(orderData: CreateOrderDto) {
+    // try {
+    //   const orderNumber = this.generateOrderNumber();
+    //   const currentTime = Timestamp.now();
+    //   const newOrder: Order = {
+    //     ...orderData,
+    //     orderNumber,
+    //     orderStatus: orderStatus.PENDING,
+    //     paymentStatus: paymentStatus.PENDING,
+    //     createdAt: currentTime,
+    //     statusUpdates: [{ [orderStatus.PENDING]: currentTime }],
+    //     orderItems: orderData.orderItems,
+    //   };
+    //   const docRef = await this.saveOrder(newOrder);
+    //   if (
+    //     orderData.paymentMethodType === paymentMethod.CARD ||
+    //     orderData.paymentMethodType === paymentMethod.APPLE_PAY ||
+    //     orderData.paymentMethodType === paymentMethod.BLIK ||
+    //     orderData.paymentMethodType === paymentMethod.GOOGLE_PAY
+    //   ) {
+    //     try {
+    //       this.logger.debug(`Request for order payment executed`);
+    //       const paymentResult = await this.paymentService.processPayment({
+    //         amount: orderData.totalPrice,
+    //         order: orderData.orderNumber,
+    //       });
+    //       if (paymentResult.status === paymentStatus.SUCCEEDED) {
+    //         await docRef.update({ paymentStatus: paymentStatus.PAID });
+    //       } else {
+    //         await docRef.update({ paymentStatus: paymentStatus.FAILED });
+    //         throw new Error('Payment failed');
+    //       }
+    //     } catch (error) {
+    //       await docRef.update({ paymentStatus: paymentStatus.FAILED });
+    //       this.logger.error(`Payment processing error: ${error.message}`);
+    //     }
+    //   }
+    //   return {
+    //     ...newOrder,
+    //     id: docRef.id,
+    //   };
+    // } catch (error) {
+    //   this.logger.error(`Failed to create order: ${error.message}`);
+    //   throw new BadRequestException('Order not saved');
+    // }
   }
 
-  private async saveOrder(order: Order): Promise<void> {
-    try {
-      await this.firebaseService.ordersCollection.add(order);
-    } catch (error) {
-      throw new BadRequestException('Order not saved');
-    }
+  private async saveOrder(order: Order) {
+    // try {
+    //   this.logger.debug(`Saving order: ${JSON.stringify(order)}`);
+    //   const docRef = await this.firebaseService.ordersCollection.add(order);
+    //   this.logger.debug(`Order ${order.orderNumber} saved successfully`);
+    //   return docRef;
+    // } catch (error) {
+    //   this.logger.error(
+    //     `Failed to save order: ${JSON.stringify(order)}. Error: ${
+    //       error.message
+    //     }`,
+    //   );
+    //   throw new BadRequestException('Order not saved');
+    // }
   }
 
   private generateOrderNumber(): string {
@@ -109,72 +86,67 @@ export class OrdersService {
     return orderNumber;
   }
 
-  async updateOrderStatus(orderId: string, status: string): Promise<void> {
-    try {
-      const orderRef: DocumentReference =
-        this.firebaseService.ordersCollection.doc(orderId);
-
-      const timestamp = new Date();
-      const statusUpdate = { [status]: timestamp };
-
-      await orderRef.update({ orderStatus: status });
-      await orderRef.update({
-        statusUpdates: FieldValue.arrayUnion(statusUpdate),
-      });
-    } catch (error) {
-      throw new BadRequestException('Order not found');
-    }
+  async updateOrderStatus(orderId: string, status: string) {
+    // try {
+    //   const orderRef: DocumentReference =
+    //     this.firebaseService.ordersCollection.doc(orderId);
+    //   const timestamp = new Date();
+    //   const statusUpdate = { [status]: timestamp };
+    //   await orderRef.update({ orderStatus: status });
+    //   await orderRef.update({
+    //     statusUpdates: FieldValue.arrayUnion(statusUpdate),
+    //   });
+    // } catch (error) {
+    //   throw new BadRequestException('Order not found');
+    // }
   }
 
-  async getOrders(): Promise<DocumentData[]> {
-    try {
-      const snapshot: QuerySnapshot<DocumentData> =
-        await this.firebaseService.ordersCollection.get();
-      const orders: DocumentData[] = [];
-      snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        orders.push({ id: doc.id, ...doc.data() });
-      });
-      return orders;
-    } catch (error) {
-      throw new NotFoundException('Order not found');
-    }
+  async getAllOrders() {
+    // try {
+    //   const querySnapshot = await this.firebaseService.ordersCollection.get();
+    //   const orders = querySnapshot.docs.map((doc) => ({
+    //     id: doc.id,
+    //     ...doc.data(),
+    //   })) as Order[];
+    //   return orders;
+    // } catch (error) {
+    //   throw new NotFoundException('Orders not found');
+    // }
   }
 
-  async getOrdersByCustomer(customerId: string): Promise<Order[]> {
-    try {
-      const ordersRef = this.firebaseService.ordersCollection.where(
-        'customerId',
-        '==',
-        customerId,
-      );
-      const ordersSnapshot = await ordersRef.get();
-
-      if (ordersSnapshot.empty) {
-        return [];
-      }
-
-      const orders: Order[] = [];
-      ordersSnapshot.forEach((doc) => {
-        const order = doc.data() as Order;
-        orders.push(order);
-      });
-
-      return orders;
-    } catch (error) {
-      throw new NotFoundException('Orders not found');
-    }
+  async getOrdersByStore(storeId: string) {
+    // try {
+    //   const querySnapshot = await this.firebaseService.ordersCollection
+    //     // .where('storeId', '==', storeId)
+    //     .orderBy('createdAt')
+    //     .get();
+    //   const orders: Order[] = [];
+    //   querySnapshot.forEach((orderDoc) => {
+    //     if (orderDoc.exists) {
+    //       const orderData = orderDoc.data() as Order;
+    //       orders.push(orderData);
+    //     }
+    //   });
+    //   return orders;
+    // } catch (error) {
+    //   throw new NotFoundException('Orders not found');
+    // }
   }
 
-  async getOrder(orderId: string): Promise<DocumentData | null> {
-    try {
-      const orderDoc: DocumentSnapshot<DocumentData> =
-        await this.firebaseService.ordersCollection.doc(orderId).get();
-      if (!orderDoc.exists) {
-        return null;
-      }
-      return orderDoc.data();
-    } catch (error) {
-      throw new NotFoundException('Ingredient not found');
-    }
+  async getOrder(orderId: string) {
+    // try {
+    //   const orderRef = this.firebaseService.productsCollection.doc(orderId);
+    //   const orderSnapshot = await orderRef.get();
+    //   if (!orderSnapshot.exists) {
+    //     throw new NotFoundException('Order not found');
+    //   }
+    //   const order: Order = {
+    //     id: orderSnapshot.id,
+    //     ...orderSnapshot.data(),
+    //   } as Order;
+    //   return order;
+    // } catch (error) {
+    //   throw new NotFoundException('Order not found');
+    // }
   }
 }

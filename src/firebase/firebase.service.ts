@@ -27,7 +27,7 @@ export class FirebaseService {
   public categoriesCollection: CollectionReference;
   public cartCollection: CollectionReference;
   public popularProductCollection: CollectionReference;
-  public restaurantsCollection: CollectionReference;
+  public storesCollection: CollectionReference;
   public ingredientsCollection: CollectionReference;
   public ingredientGroupsCollection: CollectionReference;
   public modifiersCollection: CollectionReference;
@@ -133,7 +133,7 @@ export class FirebaseService {
     this.categoriesCollection = this.db.collection('categories');
     this.cartCollection = this.db.collection('cart');
     this.popularProductCollection = this.db.collection('populars');
-    this.restaurantsCollection = this.db.collection('restaurants');
+    this.storesCollection = this.db.collection('stores');
     this.ingredientsCollection = this.db.collection('ingredients');
     this.ingredientGroupsCollection = this.db.collection('ingredients-group');
     this.modifiersCollection = this.db.collection('modifiers');

@@ -1,4 +1,4 @@
-import { CustomerAddress } from 'src/customers/customer.model';
+import { CustomerAddress } from 'src/types';
 
 export class CreateCustomerDto {
   name: string;

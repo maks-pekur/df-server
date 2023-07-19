@@ -2,14 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { ModifierGroup } from './modifire-group.entity';
+import { Ingredient } from './ingredient.entity';
 
 @Entity()
-export class Modifier {
+export class IngredientGroup {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -17,17 +17,14 @@ export class Modifier {
   name: string;
 
   @Column()
-  value: string;
-
-  @Column()
-  price: number;
-
-  @ManyToOne(() => ModifierGroup)
-  group: ModifierGroup;
+  ingredientsIds: string;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Ingredient, (ingredient) => ingredient.groups)
+  ingredients: Ingredient[];
 }

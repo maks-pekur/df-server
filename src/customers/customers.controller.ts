@@ -16,31 +16,37 @@ export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Post()
-  create(@Body() createCustomerDto: CreateCustomerDto) {
-    return this.customersService.addCustomer(createCustomerDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.customersService.getCustomers();
-  }
-
-  @Get(':id')
-  async findOneCustomer(@Param('id') customerId: string) {
-    const customer = await this.customersService.getCustomer(customerId);
+  async create(@Body() createCustomerDto: CreateCustomerDto) {
+    const customer = await this.customersService.addCustomer(createCustomerDto);
     return customer;
   }
 
-  @Patch(':id')
-  update(
+  @Get()
+  async findAll() {
+    const customers = await this.customersService.getCustomers();
+    return customers;
+  }
+
+  // @Get('/:storeId')
+  // async findByStore(@Param('storeId') storeId: string) {
+  //   const customer = await this.customersService.getCustomerByStore(storeId);
+  //   return customer;
+  // }
+
+  @Patch('/:id')
+  async update(
     @Param('id') id: string,
     @Body() updateCustomerDto: UpdateCustomerDto,
   ) {
-    return this.customersService.updateCustomer(id, updateCustomerDto);
+    const customer = await this.customersService.updateCustomer(
+      id,
+      updateCustomerDto,
+    );
+    return customer;
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.customersService.removeCustomer(id);
+  @Delete('/:id')
+  async remove(@Param('id') id: string) {
+    return await this.customersService.removeCustomer(id);
   }
 }

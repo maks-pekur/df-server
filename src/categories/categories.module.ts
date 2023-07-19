@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
+import { Category } from './entities/category.entity';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [TypeOrmModule.forFeature([Category])],
   controllers: [CategoriesController],
-  providers: [CategoriesService, FirebaseService],
-  exports: [CategoriesService],
+  providers: [CategoriesService],
 })
 export class CategoriesModule {}

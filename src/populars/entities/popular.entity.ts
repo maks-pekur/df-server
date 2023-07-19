@@ -1,3 +1,3 @@
-export class Popular {
+export class PopularProducts {
   productIds: string[];
 }

@@ -5,12 +5,11 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
-  Put,
 } from '@nestjs/common';
 import { CreateIngredientGroupDto } from './dto/create-ingredient-group.dto';
 import { UpdateIngredientGroupDto } from './dto/update-ingredient-group.dto';
-import { IngredientGroup } from './entities/ingredient.entity';
 import { IngredientGroupsService } from './ingredient-groups.service';
 
 @Controller('ingredient-groups')
@@ -18,9 +17,7 @@ export class IngredientGroupController {
   constructor(private ingredientGroupsService: IngredientGroupsService) {}
 
   @Post()
-  create(
-    @Body() createIngredientGroupDto: CreateIngredientGroupDto,
-  ): Promise<IngredientGroup> {
+  create(@Body() createIngredientGroupDto: CreateIngredientGroupDto) {
     return this.ingredientGroupsService.createIngredientGroup(
       createIngredientGroupDto,
     );
@@ -30,7 +27,7 @@ export class IngredientGroupController {
   addIngredientToGroup(
     @Param('groupId') groupId: string,
     @Body('ingredientId') ingredientId: string,
-  ): Promise<IngredientGroup> {
+  ) {
     return this.ingredientGroupsService.addIngredientToGroup(
       groupId,
       ingredientId,
@@ -41,7 +38,7 @@ export class IngredientGroupController {
   removeIngredientFromGroup(
     @Param('groupId') groupId: string,
     @Body('ingredientId') ingredientId: string,
-  ): Promise<IngredientGroup> {
+  ) {
     return this.ingredientGroupsService.removeIngredientFromGroup(
       groupId,
       ingredientId,
@@ -49,12 +46,12 @@ export class IngredientGroupController {
   }
 
   @Get()
-  findAll(): Promise<IngredientGroup[]> {
+  findAll() {
     return this.ingredientGroupsService.getAllIngredientGroups();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<IngredientGroup> {
+  findOne(@Param('id') id: string) {
     const ingredientGroup = this.ingredientGroupsService.getIngredientGroup(id);
 
     if (!ingredientGroup) {
@@ -64,11 +61,11 @@ export class IngredientGroupController {
     return ingredientGroup;
   }
 
-  @Put(':id')
+  @Patch(':id')
   update(
     @Param('id') id: string,
     @Body() updateIngredientGroupDto: UpdateIngredientGroupDto,
-  ): Promise<IngredientGroup> {
+  ) {
     return this.ingredientGroupsService.updateIngredientGroup(
       id,
       updateIngredientGroupDto,
@@ -76,7 +73,7 @@ export class IngredientGroupController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
+  remove(@Param('id') id: string) {
     return this.ingredientGroupsService.removeIngredientGroup(id);
   }
 }
