@@ -3,7 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,7 +13,7 @@ export class Story {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ default: '' })
+  @Column()
   title: string;
 
   @Column()
@@ -22,8 +22,8 @@ export class Story {
   @Column({ default: false })
   isOpen: boolean;
 
-  @ManyToOne(() => Store, (store) => store.stories)
-  store: Store;
+  @ManyToMany(() => Store, (store) => store.stories)
+  stores: Store[];
 
   @CreateDateColumn()
   createdAt: Date;

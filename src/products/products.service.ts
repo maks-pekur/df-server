@@ -54,7 +54,12 @@ export class ProductsService {
       throw new BadRequestException('Category already exists');
     }
 
-    return await this.productRepository.save(createProductDto);
+    const newProduct = {
+      categoryId: { id: createProductDto.categoryId },
+      ...createProductDto,
+    };
+
+    return await this.productRepository.save(newProduct);
   }
 
   async updateProduct(
@@ -70,7 +75,12 @@ export class ProductsService {
       throw new BadRequestException('Category already exists');
     }
 
-    return await this.productRepository.update(id, updateProductDto);
+    const updatedProduct = {
+      categoryId: { id: updateProductDto.categoryId },
+      ...updateProductDto,
+    };
+
+    return await this.productRepository.update(id, updatedProduct);
   }
 
   async removeProduct(id: string) {

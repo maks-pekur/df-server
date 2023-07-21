@@ -1,11 +1,9 @@
-import { Customer } from 'src/customers/entities/customer.entity';
 import { CartItem } from 'src/types';
 import {
   Column,
   CreateDateColumn,
-  OneToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
+  UpdateDateColumn
 } from 'typeorm';
 
 export class Cart {
@@ -18,22 +16,22 @@ export class Cart {
   @Column()
   items: CartItem[];
 
-  @Column()
+  @Column({ default: 0 })
   totalPrice: number;
 
-  @Column()
+  @Column({ default: 0 })
   deliveryCost: number;
 
-  @Column()
+  @Column({ default: 0 })
   loyaltyProgramCoinsRewarded: number;
 
-  @Column()
+  @Column({ default: 0 })
   loyaltyProgramCoinsSpent: number;
 
-  @Column()
+  @Column({ default: 0 })
   discount: number;
 
-  @Column()
+  @Column({ default: 'card' })
   paymentMethodType: string;
 
   @Column()
@@ -45,6 +43,4 @@ export class Cart {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne(() => Customer, (customer) => customer.id)
-  customer: Customer;
 }

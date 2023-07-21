@@ -10,5 +10,6 @@ export class CreateStoryDto {
   imageUrl: string;
 
   @IsBoolean()
+  @IsOptional()
   isOpen: boolean;
 }

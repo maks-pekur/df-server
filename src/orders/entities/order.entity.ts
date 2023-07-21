@@ -1,5 +1,3 @@
-import { Customer } from 'src/customers/entities/customer.entity';
-import { Store } from 'src/stores/entities/store.entity';
 import {
   orderStatus,
   orderType,
@@ -10,20 +8,16 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToOne,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Store } from './../../stores/entities/store.entity';
 
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn()
   id: string;
-
-  @OneToOne(() => Customer, (customer) => customer.orders)
-  customerId: string;
-
-  @OneToOne(() => Store)
-  storeId: string;
 
   @Column()
   orderNumber: string;
@@ -44,4 +38,8 @@ export class Order {
   createdAt: Date;
 
   statusUpdates: Array<{ [key in orderStatus]?: Date | null }>;
+
+  @ManyToOne(() => Store, (store) => store.orders)
+  @JoinColumn({ name: 'storeId' })
+  storeId: Store;
 }

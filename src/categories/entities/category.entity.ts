@@ -3,7 +3,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -19,7 +20,8 @@ export class Category {
   @Column()
   slug: string;
 
-  @OneToMany(() => Product, (product) => product.categoryId)
+  @ManyToMany(() => Product, (product) => product.categories, { eager: true })
+  @JoinTable()
   products: Product[];
 
   @CreateDateColumn()

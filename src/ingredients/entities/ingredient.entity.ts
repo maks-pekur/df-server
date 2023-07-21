@@ -1,7 +1,9 @@
+import { Product } from 'src/products/entities/product.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -22,13 +24,16 @@ export class Ingredient {
   @Column()
   imageUrl: string;
 
+  @ManyToMany(() => Product, (product) => product.ingredients)
+  products: Product[];
+
   @Column()
   isInStopList?: boolean;
 
   @Column({ default: 'ingredient' })
   type: string;
 
-  @OneToMany(() => IngredientGroup, (group) => group.ingredients)
+  @ManyToMany(() => IngredientGroup, (group) => group.ingredients)
   groups: IngredientGroup[];
 
   @CreateDateColumn()

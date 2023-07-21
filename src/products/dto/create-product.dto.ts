@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { Category } from 'src/categories/entities/category.entity';
 
 export class CreateProductDto {
   @IsString()
@@ -26,11 +27,8 @@ export class CreateProductDto {
   @IsString()
   imageUrl: string;
 
-  @IsString()
-  @IsNotEmpty({
-    message: 'Category is required',
-  })
-  categoryId: string;
+  @IsNotEmpty()
+  categoryId: Category;
 
   @IsNumber()
   @IsOptional()

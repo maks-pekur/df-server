@@ -55,6 +55,8 @@ export class StoriesService {
     if (existStory) {
       throw new BadRequestException('Category already exists');
     }
+
+    return this.storyRepository.save(createStoryDto);
   }
 
   async update(

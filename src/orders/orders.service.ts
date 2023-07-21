@@ -1,5 +1,7 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { IPaymentService } from 'src/payment/payment.interface';
+import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './entities/order.entity';
 
@@ -10,71 +12,14 @@ export class OrdersService {
   constructor(
     @Inject('PAYMENT_SERVICE')
     private paymentService: IPaymentService,
+    @InjectRepository(Order)
+    private orderRepository: Repository<Order>,
   ) {
     this.logger = new Logger(OrdersService.name);
   }
 
   async createOrder(orderData: CreateOrderDto) {
-    // try {
-    //   const orderNumber = this.generateOrderNumber();
-    //   const currentTime = Timestamp.now();
-    //   const newOrder: Order = {
-    //     ...orderData,
-    //     orderNumber,
-    //     orderStatus: orderStatus.PENDING,
-    //     paymentStatus: paymentStatus.PENDING,
-    //     createdAt: currentTime,
-    //     statusUpdates: [{ [orderStatus.PENDING]: currentTime }],
-    //     orderItems: orderData.orderItems,
-    //   };
-    //   const docRef = await this.saveOrder(newOrder);
-    //   if (
-    //     orderData.paymentMethodType === paymentMethod.CARD ||
-    //     orderData.paymentMethodType === paymentMethod.APPLE_PAY ||
-    //     orderData.paymentMethodType === paymentMethod.BLIK ||
-    //     orderData.paymentMethodType === paymentMethod.GOOGLE_PAY
-    //   ) {
-    //     try {
-    //       this.logger.debug(`Request for order payment executed`);
-    //       const paymentResult = await this.paymentService.processPayment({
-    //         amount: orderData.totalPrice,
-    //         order: orderData.orderNumber,
-    //       });
-    //       if (paymentResult.status === paymentStatus.SUCCEEDED) {
-    //         await docRef.update({ paymentStatus: paymentStatus.PAID });
-    //       } else {
-    //         await docRef.update({ paymentStatus: paymentStatus.FAILED });
-    //         throw new Error('Payment failed');
-    //       }
-    //     } catch (error) {
-    //       await docRef.update({ paymentStatus: paymentStatus.FAILED });
-    //       this.logger.error(`Payment processing error: ${error.message}`);
-    //     }
-    //   }
-    //   return {
-    //     ...newOrder,
-    //     id: docRef.id,
-    //   };
-    // } catch (error) {
-    //   this.logger.error(`Failed to create order: ${error.message}`);
-    //   throw new BadRequestException('Order not saved');
-    // }
-  }
-
-  private async saveOrder(order: Order) {
-    // try {
-    //   this.logger.debug(`Saving order: ${JSON.stringify(order)}`);
-    //   const docRef = await this.firebaseService.ordersCollection.add(order);
-    //   this.logger.debug(`Order ${order.orderNumber} saved successfully`);
-    //   return docRef;
-    // } catch (error) {
-    //   this.logger.error(
-    //     `Failed to save order: ${JSON.stringify(order)}. Error: ${
-    //       error.message
-    //     }`,
-    //   );
-    //   throw new BadRequestException('Order not saved');
-    // }
+    return 'orders';
   }
 
   private generateOrderNumber(): string {
@@ -102,35 +47,12 @@ export class OrdersService {
   }
 
   async getAllOrders() {
-    // try {
-    //   const querySnapshot = await this.firebaseService.ordersCollection.get();
-    //   const orders = querySnapshot.docs.map((doc) => ({
-    //     id: doc.id,
-    //     ...doc.data(),
-    //   })) as Order[];
-    //   return orders;
-    // } catch (error) {
-    //   throw new NotFoundException('Orders not found');
-    // }
-  }
+    const orders = await this.orderRepository.find();
 
-  async getOrdersByStore(storeId: string) {
-    // try {
-    //   const querySnapshot = await this.firebaseService.ordersCollection
-    //     // .where('storeId', '==', storeId)
-    //     .orderBy('createdAt')
-    //     .get();
-    //   const orders: Order[] = [];
-    //   querySnapshot.forEach((orderDoc) => {
-    //     if (orderDoc.exists) {
-    //       const orderData = orderDoc.data() as Order;
-    //       orders.push(orderData);
-    //     }
-    //   });
-    //   return orders;
-    // } catch (error) {
-    //   throw new NotFoundException('Orders not found');
-    // }
+    if (!orders.length) {
+      throw new NotFoundException('No orders found');
+    }
+    return orders;
   }
 
   async getOrder(orderId: string) {

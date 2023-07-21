@@ -1,11 +1,16 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CartItemDto } from './dto/cart-item.dto';
 import { Cart } from './entities/cart.entity';
 
 @Injectable()
 export class CartService {
   private readonly logger: Logger;
-  constructor() {
+  constructor(
+    @InjectRepository(Cart)
+    private cartRepository: Repository<Cart>,
+  ) {
     this.logger = new Logger(CartService.name);
   }
 
@@ -217,17 +222,12 @@ export class CartService {
   }
 
   async deleteCart(customerId: string): Promise<void> {
-    // try {
-    //   const cart = await this.getCartByCustomerId(customerId);
-    //   if (!cart) {
-    //     throw new NotFoundException('Cart not found');
-    //   }
-    //   await cart.docRef.delete();
-    //   return;
-    // } catch (error) {
-    //   throw new NotFoundException('Cart not found');
-    // }
+    const existCart = await this.cartRepository.findOne({
+      where: { customerId },
+    });
+    if (!existCart) {
+      throw new NotFoundException('Cart not found');
+    }
+    await this.cartRepository.delete({ customerId });
   }
-
-  async applyPromoCodeToCart(customerId: string, promoCode: string) {}
 }

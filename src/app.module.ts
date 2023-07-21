@@ -6,7 +6,6 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
-import { CustomersModule } from './customers/customers.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
 import { ModifiersModule } from './modifiers/modifiers.module';
 import { OrdersModule } from './orders/orders.module';
@@ -16,6 +15,7 @@ import { ProductsModule } from './products/products.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { StoreModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -47,8 +47,8 @@ import { StoriesModule } from './stories/stories.module';
     StoreModule,
     IngredientsModule,
     ModifiersModule,
-    CustomersModule,
     AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

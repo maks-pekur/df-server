@@ -1,8 +1,10 @@
+import { Product } from 'src/products/entities/product.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -25,6 +27,12 @@ export class IngredientGroup {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Ingredient, (ingredient) => ingredient.groups)
+  @ManyToMany(() => Ingredient, (ingredient) => ingredient.groups, {
+    eager: true,
+  })
+  @JoinTable()
   ingredients: Ingredient[];
+
+  @ManyToMany(() => Product, (product) => product.ingredientGroups)
+  products: Product[];
 }

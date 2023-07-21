@@ -1,8 +1,10 @@
+import { Order } from 'src/orders/entities/order.entity';
 import { Story } from 'src/stories/entities/story.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -22,6 +24,9 @@ export class Store {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Story, (story) => story.store)
+  @ManyToMany(() => Story, (story) => story.stores)
   stories: Story[];
+
+  @OneToMany(() => Order, (order) => order.storeId)
+  orders: Order[];
 }

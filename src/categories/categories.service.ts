@@ -18,11 +18,11 @@ export class CategoriesService {
   ) {}
 
   async createCategory(createCategoryDto: CreateCategoryDto) {
-    const existCategory = await this.categoryRepository.findBy({
-      name: createCategoryDto.name,
+    const existCategory = await this.categoryRepository.findOne({
+      where: { name: createCategoryDto.name },
     });
 
-    if (existCategory.length) {
+    if (existCategory) {
       throw new BadRequestException('Category already exists');
     }
     const newCategory = {
@@ -55,20 +55,20 @@ export class CategoriesService {
   }
 
   async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
-    const existCategory = await this.categoryRepository.findBy({
-      name: updateCategoryDto.name,
+    const existCategory = await this.categoryRepository.findOne({
+      where: { name: updateCategoryDto.name },
     });
 
-    if (existCategory.length) {
+    if (existCategory && existCategory.id !== id) {
       throw new BadRequestException('Category already exists');
     }
 
-    const updatedCategory = {
+    await this.categoryRepository.update(id, {
       ...updateCategoryDto,
       slug: slugify(updateCategoryDto.name, { lower: true }),
-    };
+    });
 
-    return await this.categoryRepository.update(id, updatedCategory);
+    return this.getCategory(id);
   }
 
   async removeCategory(id: string) {
@@ -78,6 +78,8 @@ export class CategoriesService {
       throw new NotFoundException('Category was not removed');
     }
 
-    return await this.categoryRepository.delete(id);
+    await this.categoryRepository.delete(id);
+
+    return { message: 'Category removed successfully' };
   }
 }
