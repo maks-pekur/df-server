@@ -1,9 +1,9 @@
-import { CartItem } from 'src/types';
+import { ICartItem, OrderType, PaymentMethod } from 'src/types';
 import {
   Column,
   CreateDateColumn,
   PrimaryGeneratedColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
 } from 'typeorm';
 
 export class Cart {
@@ -14,7 +14,7 @@ export class Cart {
   customerId: string;
 
   @Column()
-  items: CartItem[];
+  items: ICartItem[];
 
   @Column({ default: 0 })
   totalPrice: number;
@@ -32,15 +32,14 @@ export class Cart {
   discount: number;
 
   @Column({ default: 'card' })
-  paymentMethodType: string;
+  paymentMethod: PaymentMethod;
 
   @Column()
-  orderType: string;
+  orderType: OrderType;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
 }

@@ -1,6 +1,7 @@
 import { Ingredient } from 'src/ingredients/entities/ingredient.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 import { Story } from 'src/stories/entities/story.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
@@ -19,8 +20,14 @@ export class Store {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ default: '' })
   name: string;
+
+  @Column({ default: '' })
+  type: string;
+
+  @Column({ default: '' })
+  description: string;
 
   @ManyToMany(() => Story, (story) => story.stores)
   stories: Story[];
@@ -46,14 +53,20 @@ export class Store {
       _lon: number;
       _lat: number;
     };
+    country: string;
     city: string;
     street: {
-      fullStreetTypeName: string;
-      shortStreetTypeName: string;
+      streetTypeName: string;
       name: string;
     };
     houseNumber: string;
   };
+
+  @Column({ nullable: true })
+  phoneNumber: string;
+
+  @OneToMany(() => Review, (review) => review.store)
+  reviews: Review[];
 
   @CreateDateColumn()
   createdAt: Date;

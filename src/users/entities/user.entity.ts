@@ -1,4 +1,5 @@
 import { Order } from 'src/orders/entities/order.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import { UserRole } from 'src/types';
 import {
@@ -39,6 +40,9 @@ export class User {
 
   @ManyToMany(() => Store, (store) => store.users)
   stores: Store[];
+
+  @OneToMany(() => Review, (review) => review.user)
+  reviews: Review[];
 
   @CreateDateColumn()
   createdAt: Date;

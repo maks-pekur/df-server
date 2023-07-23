@@ -19,8 +19,8 @@ export class OrdersController {
   }
 
   @Get('/order/:orderId')
-  async getOrder(@Param('orderId') orderId: string) {
-    const orders = await this.ordersService.getOrder(orderId);
+  async findOne(@Param('orderId') orderId: string) {
+    const orders = await this.ordersService.findOne(orderId);
     return orders;
   }
 

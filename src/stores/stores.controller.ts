@@ -9,37 +9,30 @@ import {
 } from '@nestjs/common';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
-import { StoreService } from './stores.service';
+import { StoresService } from './stores.service';
 
 @Controller('stores')
 export class StoreController {
-  constructor(private readonly storeService: StoreService) {}
+  constructor(private readonly storeService: StoresService) {}
 
   @Post('/')
-  async create(@Body() createStoreDto: CreateStoreDto) {
-    const store = await this.storeService.createStore(createStoreDto);
-    return store;
+  async create(@Body() dto: CreateStoreDto) {
+    return await this.storeService.createStore(dto);
   }
 
   @Get('/')
   async findAll() {
-    const stores = await this.storeService.getStores();
-    return stores;
+    return await this.storeService.getStores();
   }
 
   @Get('/:storeId')
   async findOne(@Param('storeId') storeId: string) {
-    const store = await this.storeService.getStore(storeId);
-    return store;
+    return await this.storeService.findOne(storeId);
   }
 
   @Patch('/:storeId')
-  async update(
-    @Param('storeId') storeId: string,
-    @Body() updateStoreDto: UpdateStoreDto,
-  ) {
-    const store = await this.storeService.updateStore(storeId, updateStoreDto);
-    return store;
+  async update(@Param('storeId') storeId: string, @Body() dto: UpdateStoreDto) {
+    return await this.storeService.updateStore(storeId, dto);
   }
 
   @Delete('/:storeId')

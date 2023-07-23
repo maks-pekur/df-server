@@ -1,19 +1,31 @@
-import {
-  orderItem,
-  orderStatus,
-  orderType,
-  paymentMethod,
-  paymentStatus,
-} from 'src/types';
+import { IsNumberString, IsString } from 'class-validator';
+import { OrderType, PaymentMethod } from 'src/types';
+import { IOrderItem, OrderStatus, PaymentStatus } from './../../types/index';
 
 export class CreateOrderDto {
+  @IsString()
   customerId: string;
+
+  @IsString()
   storeId: string;
-  orderType: orderType;
-  paymentMethodType: paymentMethod;
+
+  @IsString()
+  orderType: OrderType;
+
+  @IsString()
+  paymentMethodType: PaymentMethod;
+
+  @IsNumberString()
   totalPrice: number;
-  orderItems: orderItem[];
+
+  orderItems: IOrderItem[];
+
+  @IsString()
   orderNumber: string;
-  orderStatus: orderStatus;
-  paymentStatus: paymentStatus;
+
+  @IsString()
+  orderStatus: OrderStatus;
+
+  @IsString()
+  paymentStatus: PaymentStatus;
 }

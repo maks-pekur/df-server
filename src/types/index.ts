@@ -1,4 +1,4 @@
-export interface CustomerAddress {
+export interface ICustomerAddress {
   label: string;
   street: string;
   build: string;
@@ -17,7 +17,7 @@ export interface IUser {
   role: UserRole;
 }
 
-export enum orderStatus {
+export enum OrderStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
   PREPARING = 'preparing',
@@ -33,14 +33,14 @@ export enum UserRole {
   CUSTOMER = 'customer',
 }
 
-export enum paymentStatus {
+export enum PaymentStatus {
   PENDING = 'pending',
   PAID = 'paid',
   FAILED = 'failed',
   SUCCEEDED = 'succeeded',
 }
 
-export enum paymentMethod {
+export enum PaymentMethod {
   CASH = 'cash',
   CART_ON_DELIVERY = 'card_on_delivery',
   CARD = 'card',
@@ -49,27 +49,27 @@ export enum paymentMethod {
   GOOGLE_PAY = 'google_pay',
 }
 
-export enum orderType {
+export enum OrderType {
   DELIVERY = 'delivery',
   TAKE_AWAY = 'takeaway',
   INSIDE = 'inside',
 }
 
-export interface orderItem {
+export interface IOrderItem {
   name: string;
   quantity: number;
   price: number;
   subTotalPrice: number;
 }
 
-export interface Schedule {
+export interface ISchedule {
   startDay: number;
   endDay: number;
   closeTime: string;
   openTime: string;
 }
 
-export interface Location {
+export interface ILocation {
   coordinates: {
     _lon: number;
     _lat: number;
@@ -83,11 +83,11 @@ export interface Location {
   houseNumber: string;
 }
 
-export interface Contacts {
+export interface IContacts {
   phone: string;
 }
 
-export interface CartItem {
+export interface ICartItem {
   productId: string;
   quantity: number;
   subTotalPrice: number;

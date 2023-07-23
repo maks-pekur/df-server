@@ -16,9 +16,10 @@ import { PaymentsModule } from './payment/payments.module';
 import { PopularsModule } from './populars/populars.module';
 import { ProductsModule } from './products/products.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
-import { StoreModule } from './stores/stores.module';
+import { StoresModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { UsersModule } from './users/users.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -47,12 +48,13 @@ import { UsersModule } from './users/users.module';
     OrdersModule,
     PaymentsModule,
     PromoCodesModule,
-    StoreModule,
+    StoresModule,
     IngredientsModule,
     ModifiersModule,
     AuthModule,
     UsersModule,
     FilesModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [

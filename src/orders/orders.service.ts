@@ -55,20 +55,15 @@ export class OrdersService {
     return orders;
   }
 
-  async getOrder(orderId: string) {
-    // try {
-    //   const orderRef = this.firebaseService.productsCollection.doc(orderId);
-    //   const orderSnapshot = await orderRef.get();
-    //   if (!orderSnapshot.exists) {
-    //     throw new NotFoundException('Order not found');
-    //   }
-    //   const order: Order = {
-    //     id: orderSnapshot.id,
-    //     ...orderSnapshot.data(),
-    //   } as Order;
-    //   return order;
-    // } catch (error) {
-    //   throw new NotFoundException('Order not found');
-    // }
+  async findOne(id: string) {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return order;
   }
 }

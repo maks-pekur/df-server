@@ -6,13 +6,13 @@ import { UpdateStoreDto } from './dto/update-store.dto';
 import { Store } from './entities/store.entity';
 
 @Injectable()
-export class StoreService {
+export class StoresService {
   private readonly logger: Logger;
   constructor(
     @InjectRepository(Store)
     private storeRepository: Repository<Store>,
   ) {
-    this.logger = new Logger(StoreService.name);
+    this.logger = new Logger(StoresService.name);
   }
 
   async createStore(createStoreDto: CreateStoreDto) {
@@ -38,7 +38,7 @@ export class StoreService {
     return stores;
   }
 
-  async getStore(id: string) {
+  async findOne(id: string) {
     const store = await this.storeRepository.findOne({
       where: { id },
     });

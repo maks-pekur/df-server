@@ -1,8 +1,9 @@
+import { Review } from 'src/reviews/entities/review.entity';
 import {
-  orderStatus,
-  orderType,
-  paymentMethod,
-  paymentStatus,
+  OrderStatus,
+  OrderType,
+  PaymentMethod,
+  PaymentStatus,
 } from 'src/types';
 import { User } from 'src/users/entities/user.entity';
 import {
@@ -11,6 +12,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Store } from './../../stores/entities/store.entity';
@@ -23,19 +25,19 @@ export class Order {
   @Column()
   orderNumber: string;
 
-  @Column({ type: 'enum', enum: orderType, default: orderType.TAKE_AWAY })
-  orderType: orderType;
+  @Column({ type: 'enum', enum: OrderType, default: OrderType.TAKE_AWAY })
+  orderType: OrderType;
 
-  @Column({ type: 'enum', enum: orderStatus, default: orderStatus.PENDING })
-  orderStatus: orderStatus;
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
+  orderStatus: OrderStatus;
 
-  @Column({ type: 'enum', enum: paymentStatus, default: paymentStatus.PENDING })
-  paymentStatus: paymentStatus;
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  paymentStatus: PaymentStatus;
 
-  @Column({ type: 'enum', enum: paymentMethod, default: paymentMethod.CARD })
-  paymentMethod: paymentMethod;
+  @Column({ type: 'enum', enum: PaymentMethod, default: PaymentMethod.CARD })
+  paymentMethod: PaymentMethod;
 
-  statusUpdates: Array<{ [key in orderStatus]?: Date | null }>;
+  statusUpdates: Array<{ [key in OrderStatus]?: Date | null }>;
 
   @ManyToOne(() => Store, (store) => store.orders)
   @JoinColumn({ name: 'storeId' })
@@ -43,6 +45,9 @@ export class Order {
 
   @ManyToOne(() => User, (user) => user.orders)
   userId: User;
+
+  @OneToMany(() => Review, (review) => review.order)
+  reviews: Review[];
 
   @CreateDateColumn()
   createdAt: Date;
