@@ -18,6 +18,12 @@ export enum orderStatus {
   CANCELED = 'canceled',
 }
 
+export enum UserRole {
+  SUPER_ADMIN = 'super_admin',
+  ADMIN = 'admin',
+  USER = 'user',
+}
+
 export enum paymentStatus {
   PENDING = 'pending',
   PAID = 'paid',
@@ -40,7 +46,7 @@ export enum orderType {
   INSIDE = 'inside',
 }
 
-export class orderItem {
+export interface orderItem {
   name: string;
   quantity: number;
   price: number;

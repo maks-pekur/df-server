@@ -16,6 +16,7 @@ import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { StoreModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { UsersModule } from './users/users.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { UsersModule } from './users/users.module';
     ModifiersModule,
     AuthModule,
     UsersModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

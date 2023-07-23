@@ -4,6 +4,7 @@ import {
   paymentMethod,
   paymentStatus,
 } from 'src/types';
+import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -16,30 +17,33 @@ import { Store } from './../../stores/entities/store.entity';
 
 @Entity()
 export class Order {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
   orderNumber: string;
 
-  @Column()
+  @Column({ type: 'enum', enum: orderType, default: orderType.TAKE_AWAY })
   orderType: orderType;
 
-  @Column()
+  @Column({ type: 'enum', enum: orderStatus, default: orderStatus.PENDING })
   orderStatus: orderStatus;
 
-  @Column()
+  @Column({ type: 'enum', enum: paymentStatus, default: paymentStatus.PENDING })
   paymentStatus: paymentStatus;
 
-  @Column()
-  paymentMethodType: paymentMethod;
-
-  @CreateDateColumn()
-  createdAt: Date;
+  @Column({ type: 'enum', enum: paymentMethod, default: paymentMethod.CARD })
+  paymentMethod: paymentMethod;
 
   statusUpdates: Array<{ [key in orderStatus]?: Date | null }>;
 
   @ManyToOne(() => Store, (store) => store.orders)
   @JoinColumn({ name: 'storeId' })
   storeId: Store;
+
+  @ManyToOne(() => User, (user) => user.orders)
+  userId: User;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

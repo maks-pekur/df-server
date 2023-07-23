@@ -20,7 +20,7 @@ export class Product {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ default: '' })
   description: string;
 
   @ManyToMany(() => Category, (category) => category.products)
@@ -43,14 +43,14 @@ export class Product {
   @Column({ default: 0 })
   price: number;
 
-  @Column()
+  @Column({ default: '' })
   measureUnit: string;
 
-  @Column()
+  @Column({ default: '' })
   measureUnitValue: string;
 
-  @Column()
-  imageUrl: string;
+  @Column('simple-array', { nullable: true })
+  imageUrls: string[];
 
   @Column({ default: 'good' })
   type: string;

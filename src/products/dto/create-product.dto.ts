@@ -1,11 +1,10 @@
 import {
   IsArray,
   IsNotEmpty,
-  IsNumber,
+  IsNumberString,
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Category } from 'src/categories/entities/category.entity';
 
 export class CreateProductDto {
   @IsString()
@@ -18,37 +17,35 @@ export class CreateProductDto {
   @IsOptional()
   description: string;
 
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty({
     message: 'Price is required',
   })
   price: number;
 
-  @IsString()
-  imageUrl: string;
-
-  @IsNotEmpty()
-  categoryId: Category;
-
-  @IsNumber()
+  @IsNumberString()
   @IsOptional()
   proteinAmount: number;
 
-  @IsNumber()
+  @IsNumberString()
   @IsOptional()
   carbohydrateAmount: number;
 
-  @IsNumber()
+  @IsNumberString()
   @IsOptional()
   fatAmount: number;
 
-  @IsNumber()
+  @IsNumberString()
   @IsOptional()
   energyAmount: number;
 
-  @IsNumber()
+  @IsNumberString()
   @IsOptional()
   caloriesAmount: number;
+
+  @IsArray()
+  @IsOptional()
+  categoryIds: string[];
 
   @IsArray()
   @IsOptional()
@@ -61,9 +58,4 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   measureUnit: string;
-
-  // extraIngredients?: string;
-  // ingredientGroups?: string[];
-  // modifierGroupsIds?: string[];
-  // removedIngredients?: string[];
 }

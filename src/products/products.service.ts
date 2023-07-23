@@ -1,95 +1,99 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Category } from 'src/categories/entities/category.entity';
 import { Repository } from 'typeorm';
+import { FilesService } from './../files/files.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductsService {
-  private readonly logger: Logger;
   constructor(
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
-  ) {
-    this.logger = new Logger(ProductsService.name);
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
+    private readonly filesService: FilesService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  async getAllProducts(): Promise<Product[]> {
+    return await this.productRepository.find();
   }
 
-  async getAllProducts() {
-    const products = await this.productRepository.find();
-
-    if (!products.length) {
-      throw new NotFoundException('No products found');
-    }
-
-    return products;
-  }
-
-  async getOneProduct(id: string) {
+  async getOneProduct(id: string): Promise<Product> {
     const product = await this.productRepository.findOne({ where: { id } });
     if (!product) {
-      throw new NotFoundException('No product found');
+      throw new BadRequestException('Product not found');
     }
     return product;
   }
 
-  async createProduct(
-    file: Express.Multer.File,
-    createProductDto: CreateProductDto,
-  ) {
-    // if (!file) {
-    //   throw new BadRequestException('Image file required');
-    // }
-
-    const existProduct = await this.productRepository.findOne({
-      where: { name: createProductDto.name },
+  async createProduct(dto: CreateProductDto, files: Express.Multer.File[]) {
+    const categories = await this.categoryRepository.find({
+      where: dto.categoryIds.map((id) => ({ id })),
     });
 
-    if (existProduct) {
-      throw new BadRequestException('Category already exists');
+    const imageUrls: string[] = [];
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const uploadResponse = await this.filesService.upload(
+          'products', // folder
+          file.buffer, // dataBuffer
+          file.originalname, // filename
+        );
+
+        const imageUrl = `${this.configService.get<string>(
+          'BASE_URL',
+        )}/img/products/${file.originalname}`;
+        imageUrls.push(imageUrl);
+      }
     }
 
     const newProduct = {
-      categoryId: { id: createProductDto.categoryId },
-      ...createProductDto,
+      ...dto,
+      categories: categories,
+      imageUrls: imageUrls,
     };
 
-    return await this.productRepository.save(newProduct);
+    return this.productRepository.save(newProduct);
   }
 
   async updateProduct(
     id: string,
-    file: Express.Multer.File,
-    updateProductDto: UpdateProductDto,
-  ) {
-    const existProduct = await this.productRepository.findOne({
-      where: { name: updateProductDto.name },
-    });
-
-    if (existProduct) {
-      throw new BadRequestException('Category already exists');
-    }
-
-    const updatedProduct = {
-      categoryId: { id: updateProductDto.categoryId },
-      ...updateProductDto,
-    };
-
-    return await this.productRepository.update(id, updatedProduct);
-  }
-
-  async removeProduct(id: string) {
+    dto: UpdateProductDto,
+    files?: Express.Multer.File[],
+  ): Promise<Product> {
     const product = await this.productRepository.findOne({ where: { id } });
 
     if (!product) {
-      throw new NotFoundException('No product found');
+      throw new NotFoundException('Product not found');
     }
 
-    return await this.productRepository.delete(id);
+    Object.assign(product, dto);
+    return await this.productRepository.save(product);
+  }
+
+  async removeProduct(id: string): Promise<void> {
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: ['categories'],
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    product.categories = [];
+    await this.productRepository.save(product);
+
+    await this.productRepository.delete(id);
   }
 }
