@@ -16,23 +16,23 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 50 })
+  @Column({ nullable: true })
   name: string;
 
-  @Column({ length: 50 })
+  @Column({ nullable: true })
   email: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.CUSTOMER })
   role: UserRole;
 
-  @Column({ unique: true })
+  @Column({ nullable: true, unique: true })
   phoneNumber: string;
 
   @Column({ default: false })
   isVerified: boolean;
 
   @Column({ nullable: true })
-  password?: string;
+  password: string;
 
   @OneToMany(() => Order, (order) => order.userId)
   orders: Order[];

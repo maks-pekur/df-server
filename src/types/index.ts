@@ -8,6 +8,15 @@ export interface CustomerAddress {
   country: string;
 }
 
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  role: UserRole;
+}
+
 export enum orderStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
@@ -19,9 +28,9 @@ export enum orderStatus {
 }
 
 export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
-  USER = 'user',
+  STAFF = 'staff',
+  CUSTOMER = 'customer',
 }
 
 export enum paymentStatus {

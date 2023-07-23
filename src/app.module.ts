@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
+import { FilesModule } from './files/files.module';
+import { RolesGuard } from './guard/roles.guard';
 import { IngredientsModule } from './ingredients/ingredients.module';
 import { ModifiersModule } from './modifiers/modifiers.module';
 import { OrdersModule } from './orders/orders.module';
@@ -16,7 +19,6 @@ import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { StoreModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { UsersModule } from './users/users.module';
-import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -53,6 +55,12 @@ import { FilesModule } from './files/files.module';
     FilesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}

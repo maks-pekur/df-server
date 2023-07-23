@@ -52,7 +52,7 @@ export class ProductsService {
 
         const imageUrl = `${this.configService.get<string>(
           'BASE_URL',
-        )}/img/products/${file.originalname}`;
+        )}/static/img/products/${file.originalname}`;
         imageUrls.push(imageUrl);
       }
     }
@@ -90,6 +90,8 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
+
+    await this.filesService.removeFiles(product.imageUrls);
 
     product.categories = [];
     await this.productRepository.save(product);
