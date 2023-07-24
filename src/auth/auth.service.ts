@@ -1,18 +1,22 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { IUser } from 'src/types';
-import { UsersService } from 'src/users/users.service';
+import { User } from 'src/users/entities/user.entity';
+import { Repository } from 'typeorm';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
     private jwtService: JwtService,
-    private usersService: UsersService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findOneByEmail(email);
+    const user = await this.usersRepository.findOne({ where: { email } });
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
       return result;
@@ -21,11 +25,41 @@ export class AuthService {
   }
 
   async login(user: IUser) {
-    const { id, email, role } = user;
+    const { id } = user;
+    const tokens = await this.issueTokenPair(user);
     return {
       id,
-      email,
-      access_token: this.jwtService.sign({ id, email, role }),
+      tokens,
     };
+  }
+
+  async getNewTokens({ refreshToken }: RefreshTokenDto) {
+    if (!refreshToken) throw new UnauthorizedException('Please sign in!');
+
+    const result = await this.jwtService.verifyAsync(refreshToken);
+    if (!result) throw new UnauthorizedException('Invalid token or expired!');
+
+    const user = await this.usersRepository.findOne({
+      where: { id: result.id },
+    });
+
+    const tokens = await this.issueTokenPair(user);
+
+    return {
+      id: user.id,
+      ...tokens,
+    };
+  }
+
+  async issueTokenPair(user: IUser) {
+    const data = { id: user.id, role: user.role };
+    const refreshToken = await this.jwtService.signAsync(data, {
+      expiresIn: '15d',
+    });
+    const accessToken = await this.jwtService.signAsync(data, {
+      expiresIn: '1h',
+    });
+
+    return { refreshToken, accessToken };
   }
 }

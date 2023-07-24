@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrdersService } from 'src/orders/orders.service';
 import { StoresService } from 'src/stores/stores.service';
-import { UsersService } from 'src/users/users.service';
+import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { Review } from './entities/review.entity';
@@ -11,9 +11,10 @@ import { Review } from './entities/review.entity';
 export class ReviewsService {
   constructor(
     @InjectRepository(Review)
-    private readonly reviewRepository: Repository<Review>,
+    private reviewRepository: Repository<Review>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
     private readonly ordersService: OrdersService,
-    private readonly usersService: UsersService,
     private readonly storesService: StoresService,
   ) {}
 
@@ -24,7 +25,9 @@ export class ReviewsService {
     newReview.serviceRating = createReviewDto.serviceRating;
 
     if (createReviewDto.userId) {
-      const user = await this.usersService.findOne(createReviewDto.userId);
+      const user = await this.usersRepository.findOne({
+        where: { id: createReviewDto.userId },
+      });
       if (user) {
         newReview.user = user;
       }
@@ -32,9 +35,9 @@ export class ReviewsService {
 
     if (createReviewDto.phoneNumber) {
       try {
-        const user = await this.usersService.findByPhoneNumber(
-          createReviewDto.phoneNumber,
-        );
+        const user = await this.usersRepository.findOne({
+          where: { phoneNumber: createReviewDto.phoneNumber },
+        });
         if (user) {
           newReview.user = user;
         }

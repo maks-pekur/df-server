@@ -27,13 +27,12 @@ export class UsersService {
       throw new BadRequestException('Email already exists');
     }
 
-    const salt = await bcrypt.genSalt();
-    const hashPassword = await bcrypt.hash(createUserDto.password, salt);
+    const salt = await bcrypt.genSalt(10);
 
     const user = await this.usersRepository.save({
       ...createUserDto,
       role: createUserDto.role || UserRole.CUSTOMER,
-      password: hashPassword,
+      password: await bcrypt.hash(createUserDto.password, salt),
     });
 
     return user;
@@ -46,30 +45,6 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException('Category not found');
-    }
-
-    return user;
-  }
-
-  async findOneByEmail(email: string): Promise<User> {
-    const user = await this.usersRepository.findOne({
-      where: { email },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Category not found');
-    }
-
-    return user;
-  }
-
-  async findByPhoneNumber(phoneNumber: string): Promise<User> {
-    const user = await this.usersRepository.findOne({
-      where: { phoneNumber },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Phone number not found');
     }
 
     return user;
