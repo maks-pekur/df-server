@@ -1,6 +1,4 @@
-import { Ingredient } from 'src/ingredients/entities/ingredient.entity';
 import { Order } from 'src/orders/entities/order.entity';
-import { Product } from 'src/products/entities/product.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { Story } from 'src/stories/entities/story.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -34,14 +32,6 @@ export class Store {
 
   @OneToMany(() => Order, (order) => order.storeId)
   orders: Order[];
-
-  @ManyToMany(() => Product)
-  @JoinTable()
-  stopListProducts: Product[];
-
-  @ManyToMany(() => Ingredient)
-  @JoinTable()
-  stopListIngredients: Ingredient[];
 
   @ManyToMany(() => User, (user) => user.stores)
   @JoinTable()

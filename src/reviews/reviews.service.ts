@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrdersService } from 'src/orders/orders.service';
 import { StoresService } from 'src/stores/stores.service';
@@ -12,24 +12,34 @@ export class ReviewsService {
   constructor(
     @InjectRepository(Review)
     private readonly reviewRepository: Repository<Review>,
-    private readonly usersService: UsersService,
     private readonly ordersService: OrdersService,
+    private readonly usersService: UsersService,
     private readonly storesService: StoresService,
   ) {}
 
   async create(createReviewDto: CreateReviewDto): Promise<Review> {
     const newReview = new Review();
-    if (!createReviewDto.userId && createReviewDto.phoneNumber) {
-      const user = await this.usersService.findByPhoneNumber(
-        createReviewDto.phoneNumber,
-      );
-      if (user) {
-        newReview.user = user;
-      }
-    } else if (createReviewDto.userId) {
+    newReview.comment = createReviewDto.comment;
+    newReview.tasteRating = createReviewDto.tasteRating;
+    newReview.serviceRating = createReviewDto.serviceRating;
+
+    if (createReviewDto.userId) {
       const user = await this.usersService.findOne(createReviewDto.userId);
       if (user) {
         newReview.user = user;
+      }
+    }
+
+    if (createReviewDto.phoneNumber) {
+      try {
+        const user = await this.usersService.findByPhoneNumber(
+          createReviewDto.phoneNumber,
+        );
+        if (user) {
+          newReview.user = user;
+        }
+      } catch (error) {
+        newReview.phoneNumber = createReviewDto.phoneNumber;
       }
     }
 
@@ -44,6 +54,8 @@ export class ReviewsService {
       const store = await this.storesService.findOne(createReviewDto.storeId);
       if (store) {
         newReview.store = store;
+      } else {
+        throw new NotFoundException('Store not found');
       }
     }
 

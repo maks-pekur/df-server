@@ -20,6 +20,7 @@ import { StoresModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { UsersModule } from './users/users.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { StopListsModule } from './stop-lists/stop-lists.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     UsersModule,
     FilesModule,
     ReviewsModule,
+    StopListsModule,
   ],
   controllers: [AppController],
   providers: [

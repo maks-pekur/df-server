@@ -15,12 +15,12 @@ import { StoresService } from './stores.service';
 export class StoreController {
   constructor(private readonly storeService: StoresService) {}
 
-  @Post('/')
+  @Post()
   async create(@Body() dto: CreateStoreDto) {
     return await this.storeService.createStore(dto);
   }
 
-  @Get('/')
+  @Get()
   async findAll() {
     return await this.storeService.getStores();
   }

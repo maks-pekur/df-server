@@ -1,5 +1,4 @@
 import {
-  IsNotEmpty,
   IsNumberString,
   IsOptional,
   IsPhoneNumber,
@@ -12,11 +11,9 @@ export class CreateReviewDto {
   comment: string;
 
   @IsNumberString()
-  @IsNotEmpty()
   tasteRating: number;
 
   @IsNumberString()
-  @IsNotEmpty()
   serviceRating: number;
 
   @IsOptional()

@@ -69,21 +69,13 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException('Category not found');
+      throw new NotFoundException('Phone number not found');
     }
 
     return user;
   }
 
   async update(id, updateUserDto: UpdateUserDto): Promise<User> {
-    const existUser = await this.usersRepository.findOne({
-      where: { id },
-    });
-
-    if (existUser && existUser.id !== id) {
-      throw new BadRequestException('Category already exists');
-    }
-
     await this.usersRepository.update(id, updateUserDto);
 
     return this.findOne(id);
