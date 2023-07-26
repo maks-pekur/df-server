@@ -6,7 +6,11 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { StoresService } from './stores.service';
@@ -16,6 +20,8 @@ export class StoreController {
   constructor(private readonly storeService: StoresService) {}
 
   @Post()
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async create(@Body() dto: CreateStoreDto) {
     return await this.storeService.createStore(dto);
   }
@@ -31,11 +37,15 @@ export class StoreController {
   }
 
   @Patch('/:storeId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async update(@Param('storeId') storeId: string, @Body() dto: UpdateStoreDto) {
     return await this.storeService.updateStore(storeId, dto);
   }
 
   @Delete('/:storeId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async delete(@Param('storeId') storeId: string) {
     await this.storeService.removeStore(storeId);
     return { message: 'Successfully removed' };

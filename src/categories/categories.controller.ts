@@ -6,7 +6,11 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -16,6 +20,8 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post('/')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   create(@Body() createCategoryDto: CreateCategoryDto) {
     const category = this.categoriesService.createCategory(createCategoryDto);
     return category;
@@ -34,6 +40,8 @@ export class CategoriesController {
   }
 
   @Patch('/:id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -46,6 +54,8 @@ export class CategoriesController {
   }
 
   @Delete('/:id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   remove(@Param('id') id: string) {
     const category = this.categoriesService.removeCategory(id);
     return category;

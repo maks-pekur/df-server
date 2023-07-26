@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -8,7 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
 import { FilesModule } from './files/files.module';
-import { RolesGuard } from './guard/roles.guard';
 import { IngredientsModule } from './ingredients/ingredients.module';
 import { ModifiersModule } from './modifiers/modifiers.module';
 import { OrdersModule } from './orders/orders.module';
@@ -16,11 +14,13 @@ import { PaymentsModule } from './payment/payments.module';
 import { PopularsModule } from './populars/populars.module';
 import { ProductsModule } from './products/products.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { StopListsModule } from './stop-lists/stop-lists.module';
 import { StoresModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { UsersModule } from './users/users.module';
-import { ReviewsModule } from './reviews/reviews.module';
-import { StopListsModule } from './stop-lists/stop-lists.module';
+import { CompaniesModule } from './companies/companies.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -57,14 +57,10 @@ import { StopListsModule } from './stop-lists/stop-lists.module';
     FilesModule,
     ReviewsModule,
     StopListsModule,
+    CompaniesModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

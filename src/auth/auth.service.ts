@@ -52,11 +52,11 @@ export class AuthService {
   }
 
   async issueTokenPair(user: IUser) {
-    const data = { id: user.id, role: user.role };
-    const refreshToken = await this.jwtService.signAsync(data, {
+    const payload = { id: user.id, role: user.role };
+    const refreshToken = await this.jwtService.signAsync(payload, {
       expiresIn: '15d',
     });
-    const accessToken = await this.jwtService.signAsync(data, {
+    const accessToken = await this.jwtService.signAsync(payload, {
       expiresIn: '1h',
     });
 

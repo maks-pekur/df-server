@@ -1,4 +1,21 @@
-export interface ICustomerAddress {
+// USER //
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  role: UserRole;
+}
+
+export enum UserRole {
+  SUPERADMIN = 'superadmin',
+  ADMIN = 'admin',
+  STAFF = 'staff',
+  CUSTOMER = 'customer',
+}
+
+export interface IUserAddress {
   label: string;
   street: string;
   build: string;
@@ -8,13 +25,12 @@ export interface ICustomerAddress {
   country: string;
 }
 
-export interface IUser {
-  id: string;
+// ORDER //
+export interface IOrderItem {
   name: string;
-  email: string;
-  phoneNumber: string;
-  password: string;
-  role: UserRole;
+  quantity: number;
+  price: number;
+  subTotalPrice: number;
 }
 
 export enum OrderStatus {
@@ -27,11 +43,13 @@ export enum OrderStatus {
   CANCELED = 'canceled',
 }
 
-export enum UserRole {
-  ADMIN = 'admin',
-  STAFF = 'staff',
-  CUSTOMER = 'customer',
+export enum OrderType {
+  DELIVERY = 'delivery',
+  TAKE_AWAY = 'takeaway',
+  INSIDE = 'inside',
 }
+
+// PAYMENT //
 
 export enum PaymentStatus {
   PENDING = 'pending',
@@ -47,19 +65,6 @@ export enum PaymentMethod {
   BLIK = 'blik',
   APPLE_PAY = 'apple_pay',
   GOOGLE_PAY = 'google_pay',
-}
-
-export enum OrderType {
-  DELIVERY = 'delivery',
-  TAKE_AWAY = 'takeaway',
-  INSIDE = 'inside',
-}
-
-export interface IOrderItem {
-  name: string;
-  quantity: number;
-  price: number;
-  subTotalPrice: number;
 }
 
 export interface ISchedule {
@@ -83,14 +88,19 @@ export interface ILocation {
   houseNumber: string;
 }
 
-export interface IContacts {
-  phone: string;
-}
-
 export interface ICartItem {
   productId: string;
   quantity: number;
   subTotalPrice: number;
   totalDiscount: number;
   totalWithDiscount: number;
+}
+
+// SUBSCRIPTION //
+export enum SubscriptionStatus {
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  PENDING = 'pending',
+  CANCELED = 'canceled',
+  TRIAL = 'trial',
 }

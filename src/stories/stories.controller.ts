@@ -7,9 +7,13 @@ import {
   Patch,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { StoriesService } from './stories.service';
@@ -19,6 +23,8 @@ export class StoriesController {
   constructor(private readonly storiesService: StoriesService) {}
 
   @Post()
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @UploadedFile() file: Express.Multer.File,
@@ -41,6 +47,8 @@ export class StoriesController {
   }
 
   @Patch(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async update(
     @UploadedFile() file: Express.Multer.File,
@@ -52,6 +60,8 @@ export class StoriesController {
   }
 
   @Delete(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: string) {
     await this.storiesService.remove(id);
     return { message: 'Story successfully removed' };

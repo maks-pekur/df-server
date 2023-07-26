@@ -1,3 +1,4 @@
+import { Company } from 'src/companies/entities/company.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { Store } from 'src/stores/entities/store.entity';
@@ -43,6 +44,9 @@ export class User {
 
   @OneToMany(() => Review, (review) => review.user)
   reviews: Review[];
+
+  @ManyToMany(() => Company, (company) => company.users)
+  companies: Company[];
 
   @CreateDateColumn()
   createdAt: Date;
