@@ -1,3 +1,4 @@
+import { Company } from 'src/companies/entities/company.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { Story } from 'src/stories/entities/story.entity';
@@ -8,6 +9,7 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -20,9 +22,6 @@ export class Store {
 
   @Column({ default: '' })
   name: string;
-
-  @Column({ default: '' })
-  type: string;
 
   @Column({ default: '' })
   description: string;
@@ -57,6 +56,9 @@ export class Store {
 
   @OneToMany(() => Review, (review) => review.store)
   reviews: Review[];
+
+  @ManyToOne(() => Company, (company) => company.stores)
+  company: Company;
 
   @CreateDateColumn()
   createdAt: Date;

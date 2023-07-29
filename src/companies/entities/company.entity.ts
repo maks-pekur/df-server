@@ -1,3 +1,4 @@
+import { Store } from 'src/stores/entities/store.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -18,6 +19,9 @@ export class Company {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  description: string;
+
   @ManyToMany(() => User, (user) => user.companies)
   users: User[];
 
@@ -26,6 +30,9 @@ export class Company {
     (companySubscription) => companySubscription.company,
   )
   companySubscriptions: CompanySubscription[];
+
+  @OneToMany(() => Store, (store) => store.company)
+  stores: Store[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -1,8 +1,11 @@
 import { CompanySubscription } from 'src/companies/entities/company-subscription.entity';
+import { Permission } from 'src/permissions/entities/permission.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -30,6 +33,12 @@ export class Subscription {
     (companySubscription) => companySubscription.subscription,
   )
   companySubscriptions: CompanySubscription[];
+
+  @ManyToMany(() => Permission, (permission) => permission.subscriptions, {
+    eager: true,
+  })
+  @JoinTable()
+  permissions: Permission[];
 
   @CreateDateColumn()
   createdAt: Date;

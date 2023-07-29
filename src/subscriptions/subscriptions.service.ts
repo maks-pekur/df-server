@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { PermissionsService } from './../permissions/permissions.service';
 import { Subscription } from './entities/subscription.entity';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class SubscriptionsService {
   constructor(
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   async findAll(): Promise<Subscription[]> {
@@ -20,6 +22,39 @@ export class SubscriptionsService {
 
   async create(subscription: Subscription): Promise<Subscription> {
     return await this.subscriptionRepository.save(subscription);
+  }
+
+  async addPermissionsToSubscription(
+    subscriptionId: string,
+    permissionIds: string[],
+  ): Promise<Subscription> {
+    const subscription = await this.subscriptionRepository.findOne({
+      where: { id: subscriptionId },
+      relations: ['permissions'],
+    });
+
+    if (!subscription) {
+      throw new Error(`Subscription with ID ${subscriptionId} not found`);
+    }
+
+    const permissions = await this.permissionsService.findMany(permissionIds);
+
+    permissionIds.forEach((permissionId) => {
+      if (!permissions.some((p) => p.id === permissionId)) {
+        throw new Error(`Permission with ID ${permissionId} not found`);
+      }
+
+      if (subscription.permissions.some((p) => p.id === permissionId)) {
+        throw new Error(
+          `Permission with ID ${permissionId} is already added to the subscription`,
+        );
+      }
+    });
+
+    subscription.permissions.push(...permissions);
+    await this.subscriptionRepository.save(subscription);
+
+    return subscription;
   }
 
   async update(id: string, subscription: Subscription): Promise<Subscription> {

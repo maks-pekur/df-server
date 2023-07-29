@@ -21,30 +21,40 @@ export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   @Get()
-  async findAll(): Promise<Subscription[]> {
-    return this.subscriptionsService.findAll();
+  async findAll() {
+    return await this.subscriptionsService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Subscription> {
-    return this.subscriptionsService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return await this.subscriptionsService.findOne(id);
   }
 
   @Post()
-  async create(@Body() subscription: Subscription): Promise<Subscription> {
-    return this.subscriptionsService.create(subscription);
+  async create(@Body() subscription: Subscription) {
+    return await this.subscriptionsService.create(subscription);
+  }
+
+  @Post(':subscriptionId/permissions')
+  async addPermissionsToSubscription(
+    @Param('subscriptionId') subscriptionId: string,
+    @Body('permissionId') permissionIds: string[],
+  ) {
+    const subscription =
+      await this.subscriptionsService.addPermissionsToSubscription(
+        subscriptionId,
+        permissionIds,
+      );
+    return subscription;
   }
 
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() subscription: Subscription,
-  ): Promise<Subscription> {
-    return this.subscriptionsService.update(id, subscription);
+  async update(@Param('id') id: string, @Body() subscription: Subscription) {
+    return await this.subscriptionsService.update(id, subscription);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    this.subscriptionsService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.subscriptionsService.remove(id);
   }
 }

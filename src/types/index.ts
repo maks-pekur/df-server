@@ -104,3 +104,8 @@ export enum SubscriptionStatus {
   CANCELED = 'canceled',
   TRIAL = 'trial',
 }
+
+export enum SubscriptionPeriod {
+  MONTHS = 'months',
+  YEARS = 'years',
+}

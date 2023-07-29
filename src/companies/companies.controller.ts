@@ -11,6 +11,7 @@ import {
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { SubscriptionPeriod } from 'src/types';
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -23,8 +24,8 @@ export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
   @Post()
-  create(@Body() createCompanyDto: CreateCompanyDto) {
-    return this.companiesService.create(createCompanyDto);
+  createCompany(@Body() createCompanyDto: CreateCompanyDto) {
+    return this.companiesService.createCompany(createCompanyDto);
   }
 
   @Get()
@@ -37,18 +38,36 @@ export class CompaniesController {
     return await this.companiesService.getCompanySubscription(id);
   }
 
+  @Post(':id/subscription')
+  async updateSubscription(
+    @Param('id') id: string,
+    @Body('newSubscriptionId') newSubscriptionId: string,
+    @Body('isPaymentPromised') isPaymentPromised: boolean,
+    @Body('period') period: SubscriptionPeriod,
+  ) {
+    return this.companiesService.updateSubscription(
+      id,
+      newSubscriptionId,
+      isPaymentPromised,
+      period,
+    );
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.companiesService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCompanyDto: UpdateCompanyDto) {
-    return this.companiesService.update(id, updateCompanyDto);
+  updateCompany(
+    @Param('id') id: string,
+    @Body() updateCompanyDto: UpdateCompanyDto,
+  ) {
+    return this.companiesService.updateCompany(id, updateCompanyDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.companiesService.remove(id);
+  removeCompany(@Param('id') id: string) {
+    return this.companiesService.removeCompany(id);
   }
 }

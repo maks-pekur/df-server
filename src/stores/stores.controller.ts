@@ -20,7 +20,7 @@ export class StoreController {
   constructor(private readonly storeService: StoresService) {}
 
   @Post()
-  @Roles('admin')
+  @Roles('superadmin', 'admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async create(@Body() dto: CreateStoreDto) {
     return await this.storeService.createStore(dto);
@@ -37,14 +37,14 @@ export class StoreController {
   }
 
   @Patch('/:storeId')
-  @Roles('admin')
+  @Roles('superadmin', 'admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async update(@Param('storeId') storeId: string, @Body() dto: UpdateStoreDto) {
     return await this.storeService.updateStore(storeId, dto);
   }
 
   @Delete('/:storeId')
-  @Roles('admin')
+  @Roles('superadmin', 'admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async delete(@Param('storeId') storeId: string) {
     await this.storeService.removeStore(storeId);
