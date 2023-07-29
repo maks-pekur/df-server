@@ -1,10 +1,9 @@
 import { Store } from 'src/stores/entities/store.entity';
-import { User } from 'src/users/entities/user.entity';
+import { UserCompany } from 'src/users/entities/user-company.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -22,12 +21,13 @@ export class Company {
   @Column({ nullable: true })
   description: string;
 
-  @ManyToMany(() => User, (user) => user.companies)
-  users: User[];
+  @OneToMany(() => UserCompany, (userCompany) => userCompany.company)
+  userCompanies: UserCompany[];
 
   @OneToMany(
     () => CompanySubscription,
     (companySubscription) => companySubscription.company,
+    { eager: true },
   )
   companySubscriptions: CompanySubscription[];
 

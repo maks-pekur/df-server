@@ -1,17 +1,17 @@
-import { Company } from 'src/companies/entities/company.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
-import { Store } from 'src/stores/entities/store.entity';
-import { UserRole } from 'src/types';
+import { Role } from 'src/roles/entities/role.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserCompany } from './user-company.entity';
 
 @Entity()
 export class User {
@@ -24,8 +24,13 @@ export class User {
   @Column({ nullable: true })
   email: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.CUSTOMER })
-  role: UserRole;
+  @ManyToMany(() => Role, (role) => role.users)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: Role[];
 
   @Column({ nullable: true, unique: true })
   phoneNumber: string;
@@ -39,14 +44,11 @@ export class User {
   @OneToMany(() => Order, (order) => order.userId)
   orders: Order[];
 
-  @ManyToMany(() => Store, (store) => store.users)
-  stores: Store[];
-
   @OneToMany(() => Review, (review) => review.user)
   reviews: Review[];
 
-  @ManyToMany(() => Company, (company) => company.users)
-  companies: Company[];
+  @OneToMany(() => UserCompany, (userCompany) => userCompany.user)
+  userCompanies: UserCompany[];
 
   @CreateDateColumn()
   createdAt: Date;

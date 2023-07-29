@@ -22,6 +22,7 @@ import { StoresModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { UsersModule } from './users/users.module';
     CompaniesModule,
     SubscriptionsModule,
     PermissionsModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -16,7 +16,9 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersRepository.findOne({ where: { email } });
+    const user = await this.usersRepository.findOne({
+      where: { email },
+    });
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
       return result;
@@ -25,10 +27,11 @@ export class AuthService {
   }
 
   async login(user: IUser) {
-    const { id } = user;
     const tokens = await this.issueTokenPair(user);
     return {
-      id,
+      id: user.id,
+      name: user.name,
+      email: user.email,
       tokens,
     };
   }
@@ -52,14 +55,14 @@ export class AuthService {
   }
 
   async issueTokenPair(user: IUser) {
-    const payload = { id: user.id, role: user.role };
+    const payload = { id: user.id };
     const refreshToken = await this.jwtService.signAsync(payload, {
       expiresIn: '15d',
     });
     const accessToken = await this.jwtService.signAsync(payload, {
-      expiresIn: '1h',
+      expiresIn: '30m',
     });
 
-    return { refreshToken, accessToken };
+    return { accessToken, refreshToken };
   }
 }
