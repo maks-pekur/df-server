@@ -10,11 +10,11 @@ export class CompanySubscription {
 
   @ManyToOne(
     () => Subscription,
-    (subscription) => subscription.companySubscriptions,
+    (subscription) => subscription.companySubscription,
   )
   subscription: Subscription;
 
-  @ManyToOne(() => Company, (company) => company.companySubscriptions, {
+  @ManyToOne(() => Company, (company) => company.subscriptions, {
     onDelete: 'CASCADE',
   })
   company: Company;

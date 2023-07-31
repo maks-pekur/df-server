@@ -17,12 +17,12 @@ import { PopularsModule } from './populars/populars.module';
 import { ProductsModule } from './products/products.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { RolesModule } from './roles/roles.module';
 import { StopListsModule } from './stop-lists/stop-lists.module';
 import { StoresModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
-import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -40,7 +40,6 @@ import { RolesModule } from './roles/roles.module';
         database: configService.get('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
-        logging: true,
       }),
       inject: [ConfigService],
     }),

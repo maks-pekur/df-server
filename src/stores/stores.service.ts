@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Order } from 'src/orders/entities/order.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 import { Repository } from 'typeorm';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
@@ -11,6 +13,10 @@ export class StoresService {
   constructor(
     @InjectRepository(Store)
     private storeRepository: Repository<Store>,
+    @InjectRepository(Order)
+    private orderRepository: Repository<Order>,
+    @InjectRepository(Review)
+    private reviewRepository: Repository<Review>,
   ) {
     this.logger = new Logger(StoresService.name);
   }
@@ -62,13 +68,24 @@ export class StoresService {
     return await this.storeRepository.update(id, updateStoreDto);
   }
 
-  async removeStore(id: string) {
+  async remove(id: string) {
     const store = await this.storeRepository.findOne({
       where: { id },
+      relations: ['orders', 'reviews'],
     });
 
     if (!store) {
       throw new BadRequestException('No store found');
+    }
+
+    for (const order of store.orders) {
+      order.storeId = null;
+      await this.orderRepository.save(order);
+    }
+
+    for (const review of store.reviews) {
+      review.store = null;
+      await this.reviewRepository.save(review);
     }
 
     return await this.storeRepository.delete(id);

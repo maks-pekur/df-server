@@ -27,10 +27,10 @@ export class Store {
   @ManyToMany(() => Story, (story) => story.stores)
   stories: Story[];
 
-  @OneToMany(() => Order, (order) => order.storeId)
+  @OneToMany(() => Order, (order) => order.storeId, { onDelete: 'SET NULL' })
   orders: Order[];
 
-  @OneToMany(() => Review, (review) => review.store)
+  @OneToMany(() => Review, (review) => review.store, { onDelete: 'SET NULL' })
   reviews: Review[];
 
   @ManyToOne(() => Company, (company) => company.stores)

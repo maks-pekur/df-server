@@ -12,6 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserCompany } from './user-company.entity';
+import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 
 @Entity()
 export class User {
@@ -49,6 +50,9 @@ export class User {
 
   @OneToMany(() => UserCompany, (userCompany) => userCompany.user)
   userCompanies: UserCompany[];
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[];
 
   @CreateDateColumn()
   createdAt: Date;

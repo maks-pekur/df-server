@@ -32,7 +32,7 @@ export class Subscription {
     () => CompanySubscription,
     (companySubscription) => companySubscription.subscription,
   )
-  companySubscriptions: CompanySubscription[];
+  companySubscription: CompanySubscription[];
 
   @ManyToMany(() => Permission, (permission) => permission.subscriptions, {
     eager: true,

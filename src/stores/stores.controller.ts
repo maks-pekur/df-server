@@ -44,10 +44,10 @@ export class StoreController {
   }
 
   @Delete('/:storeId')
-  @Roles('superadmin', 'admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin', 'admin')
   async delete(@Param('storeId') storeId: string) {
-    await this.storeService.removeStore(storeId);
+    await this.storeService.remove(storeId);
     return { message: 'Successfully removed' };
   }
 }

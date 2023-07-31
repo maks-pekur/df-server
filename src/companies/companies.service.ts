@@ -51,16 +51,26 @@ export class CompaniesService {
   }
 
   async findOne(id: string) {
-    return await this.companyRepository.findOne({ where: { id } });
-  }
-
-  async getCompanySubscription(
-    companyId: string,
-  ): Promise<CompanySubscription> {
-    return this.companySubscriptionRepository.findOne({
-      where: { company: { id: companyId } },
-      relations: ['subscription'],
-    });
+    return await this.companyRepository
+      .createQueryBuilder('company')
+      .select(['company.id', 'company.name', 'company.description'])
+      .leftJoin('company.stores', 'stores')
+      .addSelect(['stores.id', 'stores.name', 'stores.description'])
+      .leftJoinAndSelect('company.subscriptions', 'subscriptions')
+      .leftJoin('subscriptions.subscription', 'subscription')
+      .addSelect([
+        'subscription.id',
+        'subscription.name',
+        'subscription.description',
+      ])
+      .leftJoin('subscription.permissions', 'permissions')
+      .addSelect([
+        'permissions.id',
+        'permissions.name',
+        'permissions.description',
+      ])
+      .where('company.id = :id', { id })
+      .getOne();
   }
 
   async updateSubscription(

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from 'src/auth/auth.module';
 import { OrdersModule } from 'src/orders/orders.module';
 import { StoresModule } from 'src/stores/stores.module';
 import { User } from 'src/users/entities/user.entity';
@@ -9,8 +10,7 @@ import { ReviewsService } from './reviews.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Review]),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([Review, User]),
     OrdersModule,
     StoresModule,
   ],

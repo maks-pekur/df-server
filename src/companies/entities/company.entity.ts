@@ -21,15 +21,17 @@ export class Company {
   @Column({ nullable: true })
   description: string;
 
+  @Column({ nullable: true })
+  email: string;
+
   @OneToMany(() => UserCompany, (userCompany) => userCompany.company)
   userCompanies: UserCompany[];
 
   @OneToMany(
     () => CompanySubscription,
     (companySubscription) => companySubscription.company,
-    { eager: true },
   )
-  companySubscriptions: CompanySubscription[];
+  subscriptions: CompanySubscription[];
 
   @OneToMany(() => Store, (store) => store.company)
   stores: Store[];

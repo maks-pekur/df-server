@@ -1,34 +1,56 @@
 import {
   Body,
   Controller,
-  Get,
   Post,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { TokenService } from './token.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private tokenService: TokenService,
+  ) {}
 
   @UseGuards(LocalAuthGuard)
-  @Post('sign-in')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
+  @Post('/sign-in')
+  async login(@Request() req, @Res() response: Response) {
+    const user = await this.authService.login(req.user);
+    const accessToken = this.tokenService.generateAccessToken(user);
+    const refreshToken = await this.tokenService.generateRefreshToken(user);
+
+    response.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+    response.cookie('refreshToken', refreshToken.token, {
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+
+    return response.send(user);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  async getProfile(@Request() req) {
-    return req.user;
-  }
+  @Post('/refresh')
+  async refresh(
+    @Body('refreshToken') refreshToken: string,
+    @Res() response: Response,
+  ) {
+    const newAccessToken = await this.tokenService.updateAccessToken(
+      refreshToken,
+    );
 
-  @Post('refresh')
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.getNewTokens(refreshTokenDto);
+    response.cookie('accessToken', newAccessToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+
+    return response.sendStatus(200);
   }
 }

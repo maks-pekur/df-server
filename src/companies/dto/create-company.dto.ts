@@ -11,5 +11,9 @@ export class CreateCompanyDto {
 
   @IsString()
   @IsOptional()
+  email: string;
+
+  @IsString()
+  @IsOptional()
   description: string;
 }
