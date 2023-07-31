@@ -18,18 +18,18 @@ export class AuthController {
     private tokenService: TokenService,
   ) {}
 
-  @UseGuards(LocalAuthGuard)
   @Post('/sign-in')
+  @UseGuards(LocalAuthGuard)
   async login(@Request() req, @Res() response: Response) {
-    const user = await this.authService.login(req.user);
-    const accessToken = this.tokenService.generateAccessToken(user);
-    const refreshToken = await this.tokenService.generateRefreshToken(user);
+    const { accessToken, refreshToken, user } = await this.authService.login(
+      req.user,
+    );
 
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       sameSite: 'strict',
     });
-    response.cookie('refreshToken', refreshToken.token, {
+    response.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       sameSite: 'strict',
     });
@@ -37,11 +37,13 @@ export class AuthController {
     return response.send(user);
   }
 
+  @Post('/check-companies')
+  async checkCompanies(@Body('email') email: string) {
+    return await this.authService.checkCompanies(email);
+  }
+
   @Post('/refresh')
-  async refresh(
-    @Body('refreshToken') refreshToken: string,
-    @Res() response: Response,
-  ) {
+  async refresh(@Body() refreshToken: string, @Res() response: Response) {
     const newAccessToken = await this.tokenService.updateAccessToken(
       refreshToken,
     );

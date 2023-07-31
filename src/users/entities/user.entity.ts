@@ -1,3 +1,5 @@
+import { Exclude } from 'class-transformer';
+import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { Role } from 'src/roles/entities/role.entity';
@@ -12,7 +14,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserCompany } from './user-company.entity';
-import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
 
 @Entity()
 export class User {
@@ -39,6 +40,7 @@ export class User {
   @Column({ default: false })
   isVerified: boolean;
 
+  @Exclude()
   @Column({ nullable: true })
   password: string;
 

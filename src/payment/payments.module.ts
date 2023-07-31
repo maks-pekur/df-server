@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UsersModule } from 'src/users/users.module';
 import { LiqPayService } from './liqpay.service';
 import { PaymentsController } from './payments.controller';
 import { StripeService } from './stripe.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, UsersModule],
   controllers: [PaymentsController],
   providers: [
     StripeService,

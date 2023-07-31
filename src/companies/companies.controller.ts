@@ -28,7 +28,7 @@ export class CompaniesController {
   }
 
   @Get()
-  @Roles('superadmin')
+  @Roles('admin')
   findAll() {
     return this.companiesService.findAll();
   }

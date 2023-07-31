@@ -16,11 +16,23 @@ export class TokenService {
   ) {}
 
   generateAccessToken(user: IUser) {
-    const payload = { id: user.id, userCompanies: user.userCompanies };
+    const companiesList = user.userCompanies
+      .filter((userCompany) =>
+        ['admin', 'staff'].includes(userCompany.role.name),
+      )
+      .map((userCompany) => ({
+        companyId: userCompany.company.id,
+        role: userCompany.role.name,
+      }));
+
+    const payload = {
+      id: user.id,
+      userCompanies: companiesList,
+    };
     return this.jwtService.sign(payload);
   }
 
-  async generateRefreshToken(user: any) {
+  async generateRefreshToken(user: IUser) {
     const token = new RefreshToken();
 
     token.userId = user.id;
@@ -66,6 +78,7 @@ export class TokenService {
     const refreshToken = await this.refreshTokenRepository.findOne({
       where: { token: oldRefreshToken },
     });
+
     const user = await this.userService.findOne(refreshToken.userId);
 
     const newAccessToken = this.generateAccessToken(user);

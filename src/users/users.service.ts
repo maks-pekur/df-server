@@ -86,17 +86,6 @@ export class UsersService {
   async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id },
-      select: [
-        'id',
-        'name',
-        'email',
-        'phoneNumber',
-        'isVerified',
-        'userCompanies',
-        'createdAt',
-        'updatedAt',
-      ],
-      relations: ['userCompanies', 'userCompanies.role'],
     });
 
     if (!user) {

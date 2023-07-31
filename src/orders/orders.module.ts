@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoriesModule } from 'src/categories/categories.module';
 import { PaymentsModule } from 'src/payment/payments.module';
+import { UsersModule } from 'src/users/users.module';
 import { Order } from './entities/order.entity';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
@@ -11,6 +12,7 @@ import { OrdersService } from './orders.service';
     TypeOrmModule.forFeature([Order]),
     CategoriesModule,
     PaymentsModule,
+    UsersModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

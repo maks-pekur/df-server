@@ -1,11 +1,11 @@
 // USER //
 export interface IUser {
   id: string;
-  name: string;
-  email: string;
-  phoneNumber: string;
+  name?: string;
+  email?: string;
+  phoneNumber?: string;
   password?: string;
-  userCompanies: any;
+  userCompanies?: any;
 }
 
 export enum UserRole {
