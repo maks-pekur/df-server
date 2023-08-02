@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IUser } from 'src/types';
 import { UsersService } from 'src/users/users.service';
@@ -7,12 +7,12 @@ import { Repository } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
-export class TokenService {
+export class JwtService {
   constructor(
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
-    private readonly jwtService: JwtService,
     private readonly userService: UsersService,
+    private readonly jwtService: NestJwtService,
   ) {}
 
   generateAccessToken(user: IUser) {
@@ -26,7 +26,7 @@ export class TokenService {
       }));
 
     const payload = {
-      id: user.id,
+      userId: user.id,
       userCompanies: companiesList,
     };
     return this.jwtService.sign(payload);
@@ -38,7 +38,8 @@ export class TokenService {
     token.userId = user.id;
     token.isRevoked = false;
 
-    const refreshToken = this.jwtService.sign({ id: user.id });
+    const payload = { sub: user.id };
+    const refreshToken = this.jwtService.sign(payload);
 
     token.token = refreshToken;
 

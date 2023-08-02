@@ -18,6 +18,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const canActivate = await super.canActivate(context);
+
     if (!canActivate) {
       throw new UnauthorizedException();
     }
@@ -25,6 +26,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest();
 
     const token = request.cookies?.['accessToken'];
+
     if (!token) {
       throw new UnauthorizedException('Invalid token');
     }
@@ -33,10 +35,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     try {
       payload = this.jwtService.verify(token);
     } catch (error) {
+      console.log('Verification error:', error);
       throw new UnauthorizedException('Invalid token');
     }
 
-    const user = await this.usersService.findOne(payload.id);
+    const user = await this.usersService.findOne(payload.userId);
 
     if (!user) {
       throw new UnauthorizedException('User does not exist');
@@ -45,7 +48,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const companyIds = payload.userCompanies.map(
       (userCompany) => userCompany.companyId,
     );
-    if (!companyIds.includes(request.body.companyId)) {
+
+    if (!companyIds.includes(request.headers['company_id'])) {
       throw new UnauthorizedException(
         'User does not have access to this company',
       );

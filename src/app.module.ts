@@ -23,6 +23,7 @@ import { StoresModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
+import { JwtModule } from './jwt/jwt.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { UsersModule } from './users/users.module';
     SubscriptionsModule,
     PermissionsModule,
     RolesModule,
+    JwtModule,
   ],
   controllers: [AppController],
   providers: [AppService],

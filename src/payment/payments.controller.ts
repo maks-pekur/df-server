@@ -1,5 +1,5 @@
 import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/jwt/guards/jwt-auth.guard';
 import { IPaymentService } from './payment.interface';
 
 @Controller('payments')

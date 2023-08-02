@@ -7,15 +7,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { JwtService } from 'src/jwt/jwt.service';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { TokenService } from './token.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private tokenService: TokenService,
+    private jwtService: JwtService,
   ) {}
 
   @Post('/sign-in')
@@ -44,7 +44,7 @@ export class AuthController {
 
   @Post('/refresh')
   async refresh(@Body() refreshToken: string, @Res() response: Response) {
-    const newAccessToken = await this.tokenService.updateAccessToken(
+    const newAccessToken = await this.jwtService.updateAccessToken(
       refreshToken,
     );
 

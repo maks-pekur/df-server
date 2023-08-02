@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { RefreshToken } from 'src/auth/entities/refresh-token.entity';
+import { RefreshToken } from 'src/jwt/entities/refresh-token.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { Role } from 'src/roles/entities/role.entity';

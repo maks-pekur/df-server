@@ -6,17 +6,17 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from 'src/jwt/jwt.service';
 import { IUser } from 'src/types';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
-import { TokenService } from './token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private tokenService: TokenService,
+    private jwtService: JwtService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -37,8 +37,8 @@ export class AuthService {
   }
 
   async login(user: IUser) {
-    const accessToken = this.tokenService.generateAccessToken(user);
-    const refreshToken = await this.tokenService.generateRefreshToken(user);
+    const accessToken = this.jwtService.generateAccessToken(user);
+    const refreshToken = await this.jwtService.generateRefreshToken(user);
 
     const userForClient = {
       id: user.id,
