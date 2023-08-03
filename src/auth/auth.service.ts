@@ -58,7 +58,7 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const accessToken = this.jwtService.generateAccessToken(user);
+    const accessToken = await this.jwtService.generateAccessToken(user);
 
     const existingRefreshToken = await this.refreshTokenRepository.findOne({
       where: { userId: user.id },

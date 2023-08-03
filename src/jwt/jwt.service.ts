@@ -1,10 +1,15 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IUser } from 'src/types';
 import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { DecodedToken } from './token.interface';
 
 @Injectable()
 export class JwtService {
@@ -18,16 +23,26 @@ export class JwtService {
     this.logger = new Logger(JwtService.name);
   }
 
-  generateAccessToken(user: any) {
+  async generateAccessToken(user: any) {
+    const existUser = await this.userService.findOne(user.id);
+
+    const userCompany = existUser.userCompanies.find(
+      (userCompany) => userCompany.company.id === user.companyId,
+    );
+
+    if (!userCompany) {
+      throw new NotFoundException('Company not found for this user');
+    }
+
     const payload = {
       userId: user.id,
       companyId: user.companyId,
-      role: user.role,
+      role: userCompany.role.name,
     };
-    return this.jwtService.sign(payload, { expiresIn: '30m' });
+    return this.jwtService.signAsync(payload, { expiresIn: '30m' });
   }
 
-  async generateRefreshToken(user: IUser) {
+  async generateRefreshToken(user: any) {
     const oldTokens = await this.refreshTokenRepository.find({
       where: { userId: user.id },
     });
@@ -42,8 +57,8 @@ export class JwtService {
     token.userId = user.id;
     token.isRevoked = false;
 
-    const payload = { sub: user.id };
-    const refreshToken = this.jwtService.sign(payload);
+    const payload = { userId: user.id, companyId: user.companyId };
+    const refreshToken = await this.jwtService.signAsync(payload);
 
     token.token = refreshToken;
 
@@ -87,9 +102,15 @@ export class JwtService {
     });
 
     if (refreshToken) {
-      const user = await this.userService.findOne(refreshToken.userId);
+      const tokenData = this.jwtService.decode(
+        refreshToken.token,
+      ) as DecodedToken;
 
-      const newAccessToken = this.generateAccessToken(user);
+      const user = {
+        id: tokenData.userId,
+        companyId: tokenData.companyId,
+      };
+      const newAccessToken = await this.generateAccessToken(user);
 
       return newAccessToken;
     } else {
