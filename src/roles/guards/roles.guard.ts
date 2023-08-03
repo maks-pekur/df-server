@@ -14,15 +14,8 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    const companyId = request.headers['company_id'];
-
-    for (const userCompany of user.userCompanies) {
-      if (
-        userCompany.company.id === companyId &&
-        roles.includes(userCompany.role.name)
-      ) {
-        return true;
-      }
+    if (roles.includes(user.role)) {
+      return true;
     }
 
     return false;

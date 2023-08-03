@@ -6,11 +6,7 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/jwt/guards/jwt-auth.guard';
-import { Roles } from 'src/roles/decorators/roles.decorator';
-import { RolesGuard } from 'src/roles/guards/roles.guard';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { StoresService } from './stores.service';
@@ -20,8 +16,6 @@ export class StoreController {
   constructor(private readonly storeService: StoresService) {}
 
   @Post()
-  @Roles('superadmin', 'admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   async create(@Body() dto: CreateStoreDto) {
     return await this.storeService.createStore(dto);
   }
@@ -31,23 +25,21 @@ export class StoreController {
     return await this.storeService.getStores();
   }
 
-  @Get('/:storeId')
-  async findOne(@Param('storeId') storeId: string) {
-    return await this.storeService.findOne(storeId);
+  @Get('/:id')
+  async findOne(@Param('id') id: string) {
+    return await this.storeService.findOne(id);
   }
 
-  @Patch('/:storeId')
-  @Roles('superadmin', 'admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async update(@Param('storeId') storeId: string, @Body() dto: UpdateStoreDto) {
-    return await this.storeService.updateStore(storeId, dto);
+  @Patch('/:id')
+  async update(@Param('id') id: string, @Body() dto: UpdateStoreDto) {
+    return await this.storeService.updateStore(id, dto);
   }
 
-  @Delete('/:storeId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('superadmin', 'admin')
-  async delete(@Param('storeId') storeId: string) {
-    await this.storeService.remove(storeId);
+  @Delete('/:id')
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('superadmin', 'admin')
+  async delete(@Param('id') id: string) {
+    await this.storeService.remove(id);
     return { message: 'Successfully removed' };
   }
 }

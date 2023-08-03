@@ -11,7 +11,7 @@ import { UsersService } from 'src/users/users.service';
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private jwtService: JwtService,
-    private usersService: UsersService,
+    private userService: UsersService,
   ) {
     super();
   }
@@ -39,23 +39,28 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw new UnauthorizedException('Invalid token');
     }
 
-    const user = await this.usersService.findOne(payload.userId);
+    const user = await this.userService.findOne(payload.userId);
 
     if (!user) {
       throw new UnauthorizedException('User does not exist');
     }
 
-    const companyIds = payload.userCompanies.map(
-      (userCompany) => userCompany.companyId,
+    const userCompany = user.userCompanies.find(
+      (userCompany) => userCompany.company.id === payload.companyId,
     );
 
-    if (!companyIds.includes(request.headers['company_id'])) {
+    if (!userCompany || userCompany.role.name !== payload.role) {
       throw new UnauthorizedException(
         'User does not have access to this company',
       );
     }
 
-    request.user = user;
+    request.user = {
+      userId: payload.userId,
+      companyId: userCompany.company.id,
+      role: userCompany.role.name,
+    };
+
     return true;
   }
 }

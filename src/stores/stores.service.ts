@@ -44,16 +44,10 @@ export class StoresService {
     return stores;
   }
 
-  async findOne(id: string) {
-    const store = await this.storeRepository.findOne({
+  async findOne(id: string): Promise<Store> {
+    return this.storeRepository.findOne({
       where: { id },
     });
-
-    if (!store) {
-      throw new BadRequestException('No store found');
-    }
-
-    return store;
   }
 
   async updateStore(id: string, updateStoreDto: UpdateStoreDto) {
@@ -79,7 +73,7 @@ export class StoresService {
     }
 
     for (const order of store.orders) {
-      order.storeId = null;
+      order.store = null;
       await this.orderRepository.save(order);
     }
 

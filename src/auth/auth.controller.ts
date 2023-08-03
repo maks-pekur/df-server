@@ -1,12 +1,13 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Post,
-  Request,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { JwtService } from 'src/jwt/jwt.service';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -20,21 +21,21 @@ export class AuthController {
 
   @Post('/sign-in')
   @UseGuards(LocalAuthGuard)
-  async login(@Request() req, @Res() response: Response) {
+  async login(@Req() req, @Res() res: Response) {
     const { accessToken, refreshToken, user } = await this.authService.login(
       req.user,
     );
 
-    response.cookie('accessToken', accessToken, {
+    res.cookie('accessToken', accessToken, {
       httpOnly: true,
       sameSite: 'strict',
     });
-    response.cookie('refreshToken', refreshToken, {
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       sameSite: 'strict',
     });
 
-    return response.send(user);
+    return res.send(user);
   }
 
   @Post('/check-companies')
@@ -43,16 +44,33 @@ export class AuthController {
   }
 
   @Post('/refresh')
-  async refresh(@Body() refreshToken: string, @Res() response: Response) {
+  async refresh(@Req() req: Request, @Res() res: Response) {
+    if (!req.cookies.refreshToken) {
+      console.log('No refresh token found in the request');
+      throw new BadRequestException('Refresh token not found');
+    }
+
     const newAccessToken = await this.jwtService.updateAccessToken(
-      refreshToken,
+      req.cookies.refreshToken.token,
     );
 
-    response.cookie('accessToken', newAccessToken, {
+    res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
       sameSite: 'strict',
     });
 
-    return response.sendStatus(200);
+    return res.sendStatus(204);
+  }
+
+  @Post('/logout')
+  async logout(@Req() req: Request, @Res() res: Response) {
+    if (!req.cookies.refreshToken) {
+      throw new BadRequestException('Refresh token not found');
+    }
+
+    await this.jwtService.revokeRefreshToken(req.cookies.refreshToken);
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    return res.sendStatus(200);
   }
 }

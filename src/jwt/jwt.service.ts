@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IUser } from 'src/types';
@@ -8,31 +8,35 @@ import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
 export class JwtService {
+  private readonly logger: Logger;
   constructor(
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly userService: UsersService,
     private readonly jwtService: NestJwtService,
-  ) {}
+  ) {
+    this.logger = new Logger(JwtService.name);
+  }
 
-  generateAccessToken(user: IUser) {
-    const companiesList = user.userCompanies
-      .filter((userCompany) =>
-        ['admin', 'staff'].includes(userCompany.role.name),
-      )
-      .map((userCompany) => ({
-        companyId: userCompany.company.id,
-        role: userCompany.role.name,
-      }));
-
+  generateAccessToken(user: any) {
     const payload = {
       userId: user.id,
-      userCompanies: companiesList,
+      companyId: user.companyId,
+      role: user.role,
     };
-    return this.jwtService.sign(payload);
+    return this.jwtService.sign(payload, { expiresIn: '30m' });
   }
 
   async generateRefreshToken(user: IUser) {
+    const oldTokens = await this.refreshTokenRepository.find({
+      where: { userId: user.id },
+    });
+
+    for (const oldToken of oldTokens) {
+      oldToken.isRevoked = true;
+      await this.refreshTokenRepository.save(oldToken);
+    }
+
     const token = new RefreshToken();
 
     token.userId = user.id;
@@ -57,34 +61,50 @@ export class JwtService {
     });
 
     if (!refreshToken || refreshToken.isRevoked) {
+      this.logger.warn('Refresh token not found or has been revoked');
       return false;
     }
 
     const now = new Date();
     if (refreshToken.expiryDate < now) {
+      this.logger.warn('Refresh token has expired');
       return false;
     }
 
     return true;
   }
 
-  async updateAccessToken(oldRefreshToken: string) {
-    const refreshTokenIsValid = await this.validateRefreshToken(
-      oldRefreshToken,
-    );
+  async updateAccessToken(token: string) {
+    const refreshTokenIsValid = await this.validateRefreshToken(token);
+
     if (!refreshTokenIsValid) {
+      this.logger.warn('Refresh token invalid or expired');
       throw new UnauthorizedException('Refresh token is invalid or expired');
     }
 
     const refreshToken = await this.refreshTokenRepository.findOne({
-      where: { token: oldRefreshToken },
+      where: { token },
     });
 
-    const user = await this.userService.findOne(refreshToken.userId);
+    if (refreshToken) {
+      const user = await this.userService.findOne(refreshToken.userId);
 
-    const newAccessToken = this.generateAccessToken(user);
+      const newAccessToken = this.generateAccessToken(user);
 
-    return newAccessToken;
+      return newAccessToken;
+    } else {
+      this.logger.warn('Refresh token not found in the database');
+    }
+  }
+
+  async revokeRefreshToken(token: string) {
+    const refreshToken = await this.refreshTokenRepository.findOne({
+      where: { token },
+    });
+    if (refreshToken) {
+      refreshToken.isRevoked = true;
+      await this.refreshTokenRepository.save(refreshToken);
+    }
   }
 
   async cleanupTokens() {

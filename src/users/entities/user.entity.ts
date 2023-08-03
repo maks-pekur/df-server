@@ -3,6 +3,7 @@ import { RefreshToken } from 'src/jwt/entities/refresh-token.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { Role } from 'src/roles/entities/role.entity';
+import { Store } from 'src/stores/entities/store.entity';
 import {
   Column,
   CreateDateColumn,
@@ -49,6 +50,9 @@ export class User {
 
   @OneToMany(() => Review, (review) => review.user)
   reviews: Review[];
+
+  @ManyToMany(() => Store, (store) => store.users)
+  stores: Store[];
 
   @OneToMany(() => UserCompany, (userCompany) => userCompany.user)
   userCompanies: UserCompany[];

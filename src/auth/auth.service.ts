@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { RefreshToken } from 'src/jwt/entities/refresh-token.entity';
 import { JwtService } from 'src/jwt/jwt.service';
-import { IUser } from 'src/types';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 
@@ -16,10 +16,16 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(RefreshToken)
+    private refreshTokenRepository: Repository<RefreshToken>,
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(
+    email: string,
+    password: string,
+    companyId: string,
+  ): Promise<any> {
     const user = await this.usersRepository.findOne({
       where: { email },
       relations: [
@@ -30,15 +36,42 @@ export class AuthService {
     });
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
-      return result;
+      const userCompany = user.userCompanies.find(
+        (userCompany) => userCompany.company.id === companyId,
+      );
+
+      if (!userCompany) {
+        throw new UnauthorizedException(
+          'User does not belong to the given company',
+        );
+      }
+
+      const { password, userCompanies, ...result } = user;
+
+      return {
+        ...result,
+        companyId: userCompany.company.id,
+        role: userCompany.role.name,
+      };
     }
     throw new UnauthorizedException('Email or password is incorrect');
   }
 
-  async login(user: IUser) {
+  async login(user: any) {
     const accessToken = this.jwtService.generateAccessToken(user);
+
+    const existingRefreshToken = await this.refreshTokenRepository.findOne({
+      where: { userId: user.id },
+    });
+
+    if (existingRefreshToken) {
+      existingRefreshToken.isRevoked = true;
+      await this.refreshTokenRepository.save(existingRefreshToken);
+    }
+
     const refreshToken = await this.jwtService.generateRefreshToken(user);
+
+    await this.refreshTokenRepository.save(refreshToken);
 
     const userForClient = {
       id: user.id,

@@ -6,18 +6,14 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/jwt/guards/jwt-auth.guard';
 import { Roles } from 'src/roles/decorators/roles.decorator';
-import { RolesGuard } from 'src/roles/guards/roles.guard';
 import { SubscriptionPeriod } from 'src/types';
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 
 @Controller('companies')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
@@ -28,9 +24,13 @@ export class CompaniesController {
   }
 
   @Get()
-  @Roles('admin')
   findAll() {
     return this.companiesService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.companiesService.findOne(id);
   }
 
   @Post(':id/subscription')
@@ -47,12 +47,6 @@ export class CompaniesController {
       isPaymentPromised,
       period,
     );
-  }
-
-  @Get(':id')
-  @Roles('superadmin', 'admin', 'staff')
-  findOne(@Param('id') id: string) {
-    return this.companiesService.findOne(id);
   }
 
   @Patch(':id')
