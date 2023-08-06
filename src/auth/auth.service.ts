@@ -21,11 +21,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(
-    email: string,
-    password: string,
-    companyId: string,
-  ): Promise<any> {
+  async validateUser(email: string, password: string, companyId: string) {
     const user = await this.usersRepository.findOne({
       where: { email },
       relations: [
@@ -85,6 +81,16 @@ export class AuthService {
       refreshToken,
       user: userForClient,
     };
+  }
+
+  async getMe(user: any): Promise<any> {
+    const existUser = await this.usersRepository.findOne({
+      where: { id: user.id },
+    });
+
+    const { password, ...result } = existUser;
+
+    return result;
   }
 
   async checkCompanies(email: string) {

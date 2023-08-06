@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,11 +7,14 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/jwt/guards/jwt-auth.guard';
-import { Roles } from 'src/roles/decorators/roles.decorator';
-import { RolesGuard } from 'src/roles/guards/roles.guard';
+import { Request } from 'express';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { IUser } from 'src/common/interfaces/error.interface';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -19,45 +23,58 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
-  @Post('/')
-  @Roles('admin')
+  @Post('/add')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    const category = this.categoriesService.createCategory(createCategoryDto);
+  @Roles('superadmin', 'admin')
+  create(@Req() req: Request, @Body() dto: CreateCategoryDto) {
+    const user = req.user as IUser;
+    const category = this.categoriesService.create(user.companyId, dto);
+
     return category;
   }
 
-  @Get()
-  findAll() {
-    const categories = this.categoriesService.getCategories();
+  @Get('/:companyId')
+  findAll(@Param('companyId') companyId: string) {
+    if (!companyId) {
+      throw new BadRequestException('companyId is required');
+    }
+    const categories = this.categoriesService.findAll(companyId);
     return categories;
   }
 
-  @Get('/:id')
-  findOne(@Param('id') id: string) {
-    const category = this.categoriesService.getCategory(id);
+  @Get('/:companyId/:categoryId')
+  findOne(
+    @Param('companyId') companyId: string,
+    @Param('categoryId') categoryId: string,
+  ) {
+    const category = this.categoriesService.findOne(companyId, categoryId);
     return category;
   }
 
-  @Patch('/:id')
-  @Roles('admin')
+  @Patch('/:categoryId/update')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin', 'admin')
   update(
-    @Param('id') id: string,
-    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Req() req: Request,
+    @Param('categoryId') categoryId: string,
+    @Body() dto: UpdateCategoryDto,
   ) {
-    const category = this.categoriesService.updateCategory(
-      id,
-      updateCategoryDto,
+    const user = req.user as IUser;
+    const category = this.categoriesService.update(
+      user.companyId,
+      categoryId,
+      dto,
     );
     return category;
   }
 
-  @Delete('/:id')
-  @Roles('admin')
+  @Delete('/:categoryId/delete')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  remove(@Param('id') id: string) {
-    const category = this.categoriesService.removeCategory(id);
-    return category;
+  @Roles('superadmin', 'admin')
+  async remove(@Req() req: Request, @Param('categoryId') categoryId: string) {
+    const user = req.user as IUser;
+    await this.categoriesService.remove(user.companyId, categoryId);
+
+    return { message: 'Successfully removed' };
   }
 }

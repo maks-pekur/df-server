@@ -74,7 +74,7 @@ export class UsersService {
         'name',
         'email',
         'phoneNumber',
-        'isVerified',
+        'isPhoneVerified',
         'createdAt',
         'updatedAt',
       ],
@@ -115,9 +115,11 @@ export class UsersService {
       throw new BadRequestException('User not found');
     }
 
-    const userCompanies = await this.userCompaniesRepository.find({
-      where: { user: existUser },
-    });
+    const userCompanies = await this.userCompaniesRepository
+      .createQueryBuilder('userCompany')
+      .innerJoin('userCompany.user', 'user')
+      .where('user.id = :userId', { userId: existUser.id })
+      .getMany();
 
     await this.userCompaniesRepository.remove(userCompanies);
 

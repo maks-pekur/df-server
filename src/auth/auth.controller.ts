@@ -2,21 +2,25 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { JwtService } from 'src/jwt/jwt.service';
+import { SmsService } from 'src/sms/sms.service';
+import { LocalAuthGuard } from '../common/guards/local-auth.guard';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private jwtService: JwtService,
+    private smsService: SmsService,
   ) {}
 
   @Post('/sign-in')
@@ -72,5 +76,28 @@ export class AuthController {
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     return res.sendStatus(200);
+  }
+
+  @Get('/me')
+  @UseGuards(JwtAuthGuard)
+  async getMe(@Req() req: Request, @Res() res: Response) {
+    if (!req.cookies.accessToken) {
+      return res.status(401).send({ message: 'Unauthorized' });
+    }
+    const user = await this.authService.getMe(req.user);
+    return res.status(200).send(user);
+  }
+
+  @Post('/sign-in/phone')
+  signInWithPhoneNumber(@Body('phoneNumber') phoneNumber: string) {
+    return this.smsService.sendOtp(phoneNumber);
+  }
+
+  @Post('/sign-in/phone/verify')
+  verifyOtp(
+    @Body('phoneNumber') phoneNumber: string,
+    @Body('code') code: string,
+  ) {
+    return this.smsService.verifyOtp(phoneNumber, code);
   }
 }

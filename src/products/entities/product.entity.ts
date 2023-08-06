@@ -1,13 +1,17 @@
 import { Category } from 'src/categories/entities/category.entity';
+import { Company } from 'src/companies/entities/company.entity';
 import { IngredientGroup } from 'src/ingredients/entities/ingredient-group.entity';
 import { Ingredient } from 'src/ingredients/entities/ingredient.entity';
 import { ModifierGroup } from 'src/modifiers/entities/modifire-group.entity';
+import { StopList } from 'src/stop-lists/entities/stop-list.entity';
+import { Store } from 'src/stores/entities/store.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -22,23 +26,6 @@ export class Product {
 
   @Column({ default: '' })
   description: string;
-
-  @ManyToMany(() => Category, (category) => category.products)
-  categories: Category[];
-
-  @ManyToMany(() => Ingredient, (ingredient) => ingredient.products, {
-    eager: true,
-  })
-  @JoinTable()
-  ingredients: Ingredient[];
-
-  @ManyToMany(() => IngredientGroup, (group) => group.products, { eager: true })
-  @JoinTable()
-  ingredientGroups: IngredientGroup[];
-
-  @ManyToMany(() => ModifierGroup, (group) => group.products, { eager: true })
-  @JoinTable()
-  modifierGroups: ModifierGroup[];
 
   @Column({ default: 0 })
   price: number;
@@ -69,6 +56,32 @@ export class Product {
 
   @Column({ default: 0 })
   fatAmount: number;
+
+  @ManyToMany(() => Category, (category) => category.products)
+  categories: Category[];
+
+  @ManyToOne(() => Company, (company) => company.products)
+  company: Company;
+
+  @ManyToMany(() => Store, (store) => store.products)
+  stores: Store[];
+
+  @ManyToMany(() => StopList, (stopList) => stopList.products)
+  stopLists: StopList[];
+
+  @ManyToMany(() => Ingredient, (ingredient) => ingredient.products, {
+    eager: true,
+  })
+  @JoinTable()
+  ingredients: Ingredient[];
+
+  @ManyToMany(() => IngredientGroup, (group) => group.products, { eager: true })
+  @JoinTable()
+  ingredientGroups: IngredientGroup[];
+
+  @ManyToMany(() => ModifierGroup, (group) => group.products, { eager: true })
+  @JoinTable()
+  modifierGroups: ModifierGroup[];
 
   @CreateDateColumn()
   createdAt: Date;

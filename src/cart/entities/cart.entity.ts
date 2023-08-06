@@ -1,4 +1,4 @@
-import { ICartItem, OrderType, PaymentMethod } from 'src/types';
+import { ICartItem, OrderType, PaymentMethod } from 'src/common/types';
 import {
   Column,
   CreateDateColumn,

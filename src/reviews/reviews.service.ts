@@ -54,7 +54,10 @@ export class ReviewsService {
     }
 
     if (createReviewDto.storeId) {
-      const store = await this.storesService.findOne(createReviewDto.storeId);
+      const store = await this.storesService.findOne(
+        createReviewDto.companyId,
+        createReviewDto.storeId,
+      );
       if (store) {
         newReview.store = store;
       } else {

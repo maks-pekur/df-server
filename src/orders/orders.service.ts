@@ -1,6 +1,5 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IPaymentService } from 'src/payment/payment.interface';
 import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './entities/order.entity';
@@ -10,8 +9,6 @@ export class OrdersService {
   private readonly logger: Logger;
 
   constructor(
-    @Inject('PAYMENT_SERVICE')
-    private paymentService: IPaymentService,
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
   ) {

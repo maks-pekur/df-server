@@ -1,10 +1,10 @@
 import { Product } from 'src/products/entities/product.entity';
+import { StopList } from 'src/stop-lists/entities/stop-list.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   ManyToMany,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -27,8 +27,8 @@ export class Ingredient {
   @ManyToMany(() => Product, (product) => product.ingredients)
   products: Product[];
 
-  @Column()
-  isInStopList?: boolean;
+  @ManyToMany(() => StopList, (stopList) => stopList.products)
+  stopLists: StopList[];
 
   @Column({ default: 'ingredient' })
   type: string;

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -6,9 +6,11 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
+import { LoggerMiddleware } from './common/utils/logger';
 import { CompaniesModule } from './companies/companies.module';
 import { FilesModule } from './files/files.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
+import { JwtModule } from './jwt/jwt.module';
 import { ModifiersModule } from './modifiers/modifiers.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payment/payments.module';
@@ -18,16 +20,17 @@ import { ProductsModule } from './products/products.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { RolesModule } from './roles/roles.module';
+import { SmsModule } from './sms/sms.module';
 import { StopListsModule } from './stop-lists/stop-lists.module';
 import { StoresModule } from './stores/stores.module';
 import { StoriesModule } from './stories/stories.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
-import { JwtModule } from './jwt/jwt.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      envFilePath: `.${process.env.NODE_ENV}.env`,
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
@@ -65,8 +68,13 @@ import { JwtModule } from './jwt/jwt.module';
     PermissionsModule,
     RolesModule,
     JwtModule,
+    SmsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

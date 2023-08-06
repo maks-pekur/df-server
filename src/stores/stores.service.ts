@@ -1,7 +1,14 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
+import { StopList } from 'src/stop-lists/entities/stop-list.entity';
 import { Repository } from 'typeorm';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
@@ -13,6 +20,8 @@ export class StoresService {
   constructor(
     @InjectRepository(Store)
     private storeRepository: Repository<Store>,
+    @InjectRepository(StopList)
+    private stopListRepository: Repository<StopList>,
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
     @InjectRepository(Review)
@@ -21,67 +30,111 @@ export class StoresService {
     this.logger = new Logger(StoresService.name);
   }
 
-  async createStore(createStoreDto: CreateStoreDto) {
+  async createStore(companyId: string, dto: CreateStoreDto) {
     const existStore = await this.storeRepository.findOne({
       where: {
-        name: createStoreDto.name,
+        name: dto.name,
+        company: { id: companyId },
       },
     });
 
     if (existStore) {
-      throw new BadRequestException('Store already exists');
-    }
-    return await this.storeRepository.save(createStoreDto);
-  }
-
-  async getStores() {
-    const stores = await this.storeRepository.find();
-
-    if (!stores.length) {
-      throw new BadRequestException('No stores found');
+      throw new BadRequestException(
+        'Store with this name already exists in the company',
+      );
     }
 
-    return stores;
-  }
-
-  async findOne(id: string): Promise<Store> {
-    return this.storeRepository.findOne({
-      where: { id },
-    });
-  }
-
-  async updateStore(id: string, updateStoreDto: UpdateStoreDto) {
-    const existStore = await this.storeRepository.findBy({
-      name: updateStoreDto.name,
+    const newStore = this.storeRepository.create({
+      ...dto,
+      company: { id: companyId },
     });
 
-    if (existStore.length) {
-      throw new BadRequestException('Store already exists');
-    }
+    const createdStore = await this.storeRepository.save(newStore);
 
-    return await this.storeRepository.update(id, updateStoreDto);
+    const stopList = new StopList();
+    stopList.store = createdStore;
+    await this.stopListRepository.save(stopList);
+
+    return createdStore;
   }
 
-  async remove(id: string) {
-    const store = await this.storeRepository.findOne({
-      where: { id },
-      relations: ['orders', 'reviews'],
+  async findAll(companyId: string) {
+    try {
+      const stores = await this.storeRepository
+        .createQueryBuilder('store')
+        .where('store.companyId = :companyId', { companyId })
+        .getMany();
+
+      if (!stores.length) {
+        return {
+          message: `The company ${companyId} has no stores yet`,
+        };
+      }
+
+      return stores;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async findOne(companyId: string, storeId: string): Promise<Store> {
+    try {
+      const store = await this.storeRepository.findOne({
+        where: { id: storeId, company: { id: companyId } },
+      });
+
+      if (!store) {
+        throw new NotFoundException(
+          `Store with ID ${storeId} not found in company with ID ${companyId}`,
+        );
+      }
+
+      return store;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async updateStore(companyId: string, storeId: string, dto: UpdateStoreDto) {
+    const existStore = await this.storeRepository.findOne({
+      where: { name: dto.name, company: { id: companyId } },
     });
 
-    if (!store) {
-      throw new BadRequestException('No store found');
+    if (existStore && existStore.id !== storeId) {
+      throw new BadRequestException('Store with this name already exists');
     }
 
-    for (const order of store.orders) {
-      order.store = null;
-      await this.orderRepository.save(order);
-    }
+    await this.storeRepository.update(storeId, dto);
 
-    for (const review of store.reviews) {
-      review.store = null;
-      await this.reviewRepository.save(review);
-    }
+    const updatedStore = await this.storeRepository.findOne({
+      where: { id: storeId, company: { id: companyId } },
+    });
 
-    return await this.storeRepository.delete(id);
+    return updatedStore;
+  }
+
+  async remove(storeId: string) {
+    return await this.storeRepository.manager.transaction(async (manager) => {
+      const store = await manager.findOne(Store, {
+        where: { id: storeId },
+        relations: ['orders', 'reviews'],
+      });
+
+      if (!store) {
+        throw new BadRequestException('No store found');
+      }
+
+      for (const order of store.orders) {
+        order.store = null;
+        await manager.save(Order, order);
+      }
+
+      for (const review of store.reviews) {
+        review.store = null;
+        await manager.save(Review, review);
+      }
+
+      return await manager.delete(Store, storeId);
+    });
   }
 }

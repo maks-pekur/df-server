@@ -6,9 +6,15 @@ import {
   Param,
   Patch,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { Roles } from 'src/roles/decorators/roles.decorator';
-import { SubscriptionPeriod } from 'src/types';
+import { Request } from 'express';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { IUser } from 'src/common/interfaces/error.interface';
+import { SubscriptionPeriod } from 'src/common/types';
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -17,50 +23,66 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
-  @Post()
+  @Post('/add')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin')
-  create(@Body() createCompanyDto: CreateCompanyDto) {
-    return this.companiesService.createCompany(createCompanyDto);
+  create(@Body() dto: CreateCompanyDto) {
+    return this.companiesService.createCompany(dto);
   }
 
   @Get()
-  findAll() {
-    return this.companiesService.findAll();
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
+  async findAll() {
+    const companies = await this.companiesService.findAll();
+    return companies;
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.companiesService.findOne(id);
+  @Get('/:name')
+  async findOne(@Param('name') name: string) {
+    const company = await this.companiesService.findOne(name);
+    return company;
   }
 
-  @Post(':id/subscription')
+  @Post('/subscriptions/update')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin', 'admin')
   async updateSubscription(
-    @Param('id') id: string,
+    @Req() req: Request,
     @Body('newSubscriptionId') newSubscriptionId: string,
     @Body('isPaymentPromised') isPaymentPromised: boolean,
     @Body('period') period: SubscriptionPeriod,
   ) {
+    const user = req.user as IUser;
+
     return this.companiesService.updateSubscription(
-      id,
+      user.companyId,
       newSubscriptionId,
       isPaymentPromised,
       period,
     );
   }
 
-  @Patch(':id')
+  @Patch('/update')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin')
   updateCompany(
-    @Param('id') id: string,
+    @Req() req: Request,
     @Body() updateCompanyDto: UpdateCompanyDto,
   ) {
-    return this.companiesService.updateCompany(id, updateCompanyDto);
+    const user = req.user as IUser;
+
+    return this.companiesService.updateCompany(
+      user.companyId,
+      updateCompanyDto,
+    );
   }
 
-  @Delete(':id')
-  @Roles('superadmin')
-  removeCompany(@Param('id') id: string) {
-    return this.companiesService.removeCompany(id);
+  @Delete('/delete')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  removeCompany(@Req() req: Request) {
+    const user = req.user as IUser;
+    return this.companiesService.removeCompany(user.companyId);
   }
 }

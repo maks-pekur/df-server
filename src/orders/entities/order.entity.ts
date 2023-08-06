@@ -1,10 +1,10 @@
-import { Review } from 'src/reviews/entities/review.entity';
 import {
   OrderStatus,
   OrderType,
   PaymentMethod,
   PaymentStatus,
-} from 'src/types';
+} from 'src/common/types';
+import { Review } from 'src/reviews/entities/review.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,

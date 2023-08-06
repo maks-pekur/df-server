@@ -1,18 +1,35 @@
 import { Ingredient } from 'src/ingredients/entities/ingredient.entity';
 import { Product } from 'src/products/entities/product.entity';
-import { JoinColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Store } from 'src/stores/entities/store.entity';
+import {
+  CreateDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
+@Entity()
 export class StopList {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToMany(() => Product, (product) => product.id, { nullable: true })
-  @JoinColumn({ name: 'productIds' })
+  @OneToOne(() => Store, (store) => store.stopList)
+  store: Store;
+
+  @ManyToMany(() => Product, (product) => product.stopLists)
+  @JoinTable()
   products: Product[];
 
-  @OneToMany(() => Ingredient, (ingredient) => ingredient.id, {
-    nullable: true,
-  })
-  @JoinColumn({ name: 'ingredientIds' })
+  @ManyToMany(() => Ingredient, (ingredient) => ingredient.stopLists)
+  @JoinTable()
   ingredients: Ingredient[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

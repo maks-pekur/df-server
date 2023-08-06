@@ -39,7 +39,7 @@ export class User {
   phoneNumber: string;
 
   @Column({ default: false })
-  isVerified: boolean;
+  isPhoneVerified: boolean;
 
   @Exclude()
   @Column({ nullable: true })

@@ -26,6 +26,10 @@ export class CreateReviewDto {
 
   @IsString()
   @IsOptional()
+  companyId: string;
+
+  @IsString()
+  @IsOptional()
   orderId: string;
 
   @IsString()

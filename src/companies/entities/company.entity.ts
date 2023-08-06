@@ -1,3 +1,5 @@
+import { Category } from 'src/categories/entities/category.entity';
+import { Product } from 'src/products/entities/product.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import { UserCompany } from 'src/users/entities/user-company.entity';
 import {
@@ -21,20 +23,30 @@ export class Company {
   @Column({ nullable: true })
   description: string;
 
-  @Column({ nullable: true })
-  email: string;
+  @OneToMany(() => Store, (store) => store.company, { onDelete: 'CASCADE' })
+  stores: Store[];
 
-  @OneToMany(() => UserCompany, (userCompany) => userCompany.company)
+  @OneToMany(() => Category, (category) => category.company, {
+    onDelete: 'CASCADE',
+  })
+  categories: Category[];
+
+  @OneToMany(() => Product, (product) => product.company, {
+    onDelete: 'CASCADE',
+  })
+  products: Product[];
+
+  @OneToMany(() => UserCompany, (userCompany) => userCompany.company, {
+    onDelete: 'CASCADE',
+  })
   userCompanies: UserCompany[];
 
   @OneToMany(
     () => CompanySubscription,
     (companySubscription) => companySubscription.company,
+    { onDelete: 'CASCADE' },
   )
   subscriptions: CompanySubscription[];
-
-  @OneToMany(() => Store, (store) => store.company)
-  stores: Store[];
 
   @CreateDateColumn()
   createdAt: Date;

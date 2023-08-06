@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Store } from 'src/stores/entities/store.entity';
 import { Subscription } from 'src/subscriptions/entities/subscription.entity';
 import { UsersModule } from 'src/users/users.module';
 import { CompaniesController } from './companies.controller';
@@ -9,7 +10,12 @@ import { Company } from './entities/company.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Company, CompanySubscription, Subscription]),
+    TypeOrmModule.forFeature([
+      Company,
+      CompanySubscription,
+      Subscription,
+      Store,
+    ]),
     UsersModule,
   ],
   controllers: [CompaniesController],

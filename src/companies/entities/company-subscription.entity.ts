@@ -1,5 +1,5 @@
+import { SubscriptionStatus } from 'src/common/types';
 import { Subscription } from 'src/subscriptions/entities/subscription.entity';
-import { SubscriptionStatus } from 'src/types';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Company } from './company.entity';
 

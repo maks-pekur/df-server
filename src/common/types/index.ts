@@ -1,12 +1,4 @@
 // USER //
-export interface IUser {
-  id: string;
-  name?: string;
-  email?: string;
-  phoneNumber?: string;
-  password?: string;
-  userCompanies?: any;
-}
 
 export enum UserRole {
   SUPERADMIN = 'superadmin',
@@ -109,5 +101,3 @@ export enum SubscriptionPeriod {
   MONTHS = 'months',
   YEARS = 'years',
 }
-
-

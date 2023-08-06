@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -11,9 +12,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express/multer';
-import { JwtAuthGuard } from 'src/jwt/guards/jwt-auth.guard';
-import { Roles } from 'src/roles/decorators/roles.decorator';
-import { RolesGuard } from 'src/roles/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
@@ -22,15 +23,28 @@ import { ProductsService } from './products.service';
 export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
-  @Get('/')
-  async findAll() {
-    const products = await this.productService.getAllProducts();
+  @Get('/:companyId')
+  async findAll(@Param('companyId') companyId: string) {
+    if (!companyId) {
+      throw new BadRequestException('СompanyId is required');
+    }
+
+    const products = await this.productService.findAll(companyId);
+
     return products;
   }
 
-  @Get('/:id')
-  async findOne(@Param('id') id: string) {
-    const product = await this.productService.getOneProduct(id);
+  @Get('/:companyId/:id')
+  async findOne(
+    @Param('companyId') companyId: string,
+    @Param('id') id: string,
+  ) {
+    if (!companyId || !id) {
+      throw new BadRequestException('Both companyId and id are required');
+    }
+
+    const product = await this.productService.findOne(companyId, id);
+
     return product;
   }
 
@@ -46,8 +60,8 @@ export class ProductsController {
   }
 
   @Patch('/:id')
-  @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @UseInterceptors(FilesInterceptor('files'))
   async update(
     @Param('id') id: string,
@@ -58,8 +72,8 @@ export class ProductsController {
   }
 
   @Delete('/:id')
-  @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async delete(@Param('id') id: string) {
     await this.productService.removeProduct(id);
     return { message: 'Product successfully deleted' };
