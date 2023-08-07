@@ -6,10 +6,9 @@ import { IPaymentService } from './payment.interface';
 @Injectable()
 export class LiqPayService implements IPaymentService {
   private liqPay: any;
-  private readonly logger: Logger;
+  private readonly logger = new Logger(LiqPayService.name);
 
   constructor(private configService: ConfigService) {
-    this.logger = new Logger(LiqPayService.name);
     // this.liqPay = new LiqPay(
     //   this.configService.get<string>('LIQPAY_PUBLIC_KEY'),
     //   this.configService.get<string>('LIQPAY_PRIVATE_KEY'),

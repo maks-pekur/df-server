@@ -12,13 +12,12 @@ import { Story } from './entities/story.entity';
 
 @Injectable()
 export class StoriesService {
-  private readonly logger: Logger;
+  private readonly logger = new Logger(StoriesService.name);
+
   constructor(
     @InjectRepository(Story)
     private storyRepository: Repository<Story>,
-  ) {
-    this.logger = new Logger(StoriesService.name);
-  }
+  ) {}
 
   async findAll() {
     const stories = await this.storyRepository.find();

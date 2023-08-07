@@ -5,10 +5,9 @@ import { IngredientGroupsService } from './ingredient-groups.service';
 
 @Injectable()
 export class IngredientsService {
-  private readonly logger: Logger;
-  constructor(private ingredientGroupsService: IngredientGroupsService) {
-    this.logger = new Logger(IngredientsService.name);
-  }
+  private readonly logger = new Logger(IngredientsService.name);
+
+  constructor(private ingredientGroupsService: IngredientGroupsService) {}
 
   async createIngredient(
     file: Express.Multer.File,

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrdersService } from 'src/orders/orders.service';
 import { StoresService } from 'src/stores/stores.service';
@@ -9,6 +9,8 @@ import { Review } from './entities/review.entity';
 
 @Injectable()
 export class ReviewsService {
+  private readonly logger = new Logger(ReviewsService.name);
+
   constructor(
     @InjectRepository(Review)
     private reviewRepository: Repository<Review>,

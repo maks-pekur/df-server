@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
@@ -6,6 +6,8 @@ import { join } from 'path';
 
 @Injectable()
 export class FilesService {
+  private readonly logger = new Logger(FilesService.name);
+
   async upload(
     folder: string,
     dataBuffer: Buffer,

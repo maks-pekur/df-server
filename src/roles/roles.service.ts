@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +12,8 @@ import { Role } from './entities/role.entity';
 
 @Injectable()
 export class RolesService {
+  private readonly logger = new Logger(RolesService.name);
+
   constructor(
     @InjectRepository(Role) private rolesRepository: Repository<Role>,
   ) {}

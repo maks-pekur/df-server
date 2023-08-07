@@ -6,14 +6,12 @@ import { Order } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
-  private readonly logger: Logger;
+  private readonly logger = new Logger(OrdersService.name);
 
   constructor(
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
-  ) {
-    this.logger = new Logger(OrdersService.name);
-  }
+  ) {}
 
   async createOrder(orderData: CreateOrderDto) {
     return 'orders';

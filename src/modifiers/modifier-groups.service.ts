@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { CreateModifierGroupDto } from './dto/create-modifier-group.dto';
 import { UpdateModifierGroupDto } from './dto/update-modifier-group.dto';
 
 @Injectable()
 export class ModifierGroupsService {
+  private readonly logger = new Logger(ModifierGroupsService.name);
+
   constructor() {}
 
   async createModifierGroup(createModifierGroupDto: CreateModifierGroupDto) {

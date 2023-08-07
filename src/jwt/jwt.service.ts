@@ -13,15 +13,14 @@ import { DecodedToken } from './token.interface';
 
 @Injectable()
 export class JwtService {
-  private readonly logger: Logger;
+  private readonly logger = new Logger(JwtService.name);
+
   constructor(
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly userService: UsersService,
     private readonly jwtService: NestJwtService,
-  ) {
-    this.logger = new Logger(JwtService.name);
-  }
+  ) {}
 
   async generateAccessToken(user: any) {
     const existUser = await this.userService.findOne(user.id);

@@ -16,7 +16,7 @@ import { Store } from './entities/store.entity';
 
 @Injectable()
 export class StoresService {
-  private readonly logger: Logger;
+  private readonly logger = new Logger(StoresService.name);
   constructor(
     @InjectRepository(Store)
     private storeRepository: Repository<Store>,
@@ -27,36 +27,49 @@ export class StoresService {
     @InjectRepository(Review)
     private reviewRepository: Repository<Review>,
     @InjectEntityManager() private readonly entityManager: EntityManager,
-  ) {
-    this.logger = new Logger(StoresService.name);
-  }
+  ) {}
 
   async createStore(companyId: string, dto: CreateStoreDto) {
-    const existStore = await this.storeRepository.findOne({
-      where: {
-        name: dto.name,
-        company: { id: companyId },
+    return await this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        try {
+          const existStore = await transactionalEntityManager.findOne(Store, {
+            where: {
+              name: dto.name,
+              company: { id: companyId },
+            },
+          });
+
+          if (existStore) {
+            throw new BadRequestException(
+              'Store with this name already exists in the company',
+            );
+          }
+
+          const newStore = transactionalEntityManager.create(Store, {
+            ...dto,
+            company: { id: companyId },
+          });
+
+          const createdStore = await transactionalEntityManager.save(
+            Store,
+            newStore,
+          );
+
+          const stopList = new StopList();
+          stopList.store = createdStore;
+          await transactionalEntityManager.save(StopList, stopList);
+
+          return createdStore;
+        } catch (error) {
+          this.logger.error(
+            `Failed to create store for company ID ${companyId}.`,
+          );
+          this.logger.error(error.stack);
+          throw error;
+        }
       },
-    });
-
-    if (existStore) {
-      throw new BadRequestException(
-        'Store with this name already exists in the company',
-      );
-    }
-
-    const newStore = this.storeRepository.create({
-      ...dto,
-      company: { id: companyId },
-    });
-
-    const createdStore = await this.storeRepository.save(newStore);
-
-    const stopList = new StopList();
-    stopList.store = createdStore;
-    await this.stopListRepository.save(stopList);
-
-    return createdStore;
+    );
   }
 
   async findAll(companyId: string) {

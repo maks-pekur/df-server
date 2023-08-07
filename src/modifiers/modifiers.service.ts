@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { CreateModifierDto } from './dto/create-modifier.dto';
 import { UpdateModifierDto } from './dto/update-modifier.dto';
 
 @Injectable()
 export class ModifiersService {
+  private readonly logger = new Logger(ModifiersService.name);
+
   constructor() {}
 
   async createModifier(createModifierDto: CreateModifierDto) {

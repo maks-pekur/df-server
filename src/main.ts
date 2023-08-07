@@ -4,7 +4,7 @@ import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
-import { CustomExceptionFilter } from './common/filters/custom-exception.filter';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const PORT = process.env.PORT || 5000;
@@ -24,7 +24,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new CustomExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen(PORT, () => console.log(`Server started on port - ${PORT}`));
 }

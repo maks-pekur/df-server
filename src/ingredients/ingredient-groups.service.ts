@@ -4,10 +4,7 @@ import { UpdateIngredientGroupDto } from './dto/update-ingredient-group.dto';
 
 @Injectable()
 export class IngredientGroupsService {
-  private readonly logger: Logger;
-  constructor() {
-    this.logger = new Logger(IngredientGroupsService.name);
-  }
+  private readonly logger = new Logger(IngredientGroupsService.name);
 
   async createIngredientGroup(
     createIngredientGroupDto: CreateIngredientGroupDto,

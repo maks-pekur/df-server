@@ -6,10 +6,9 @@ import { IPaymentService } from './payment.interface';
 @Injectable()
 export class StripeService implements IPaymentService {
   private stripe: Stripe;
-  private readonly logger: Logger;
+  private readonly logger = new Logger(StripeService.name);
 
   constructor(private configService: ConfigService) {
-    this.logger = new Logger(StripeService.name);
     this.stripe = new Stripe(
       this.configService.get<string>('STRIPE_SECRET_KEY'),
       {

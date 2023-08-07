@@ -1,9 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isBefore } from 'date-fns';
-import { generateOTP } from 'src/common/utils/codeGenerator';
-import { getExpiry } from 'src/common/utils/dateTimeUtility';
+import { generateOTP } from 'src/common/utils/code-generator';
+import { getExpiry } from 'src/common/utils/date-time-utility';
 import { User } from 'src/users/entities/user.entity';
 import twilio from 'twilio';
 import { Repository } from 'typeorm';
@@ -12,6 +12,7 @@ import { OTP } from './entities/otp.entity';
 @Injectable()
 export class SmsService {
   private client;
+  private readonly logger = new Logger(SmsService.name);
 
   constructor(
     @InjectRepository(OTP)

@@ -1,12 +1,10 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
-import { LoggerMiddleware } from './common/utils/logger';
+import { LoggerMiddleware } from './common/utils/logger-middleware';
 import { CompaniesModule } from './companies/companies.module';
 import { FilesModule } from './files/files.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
@@ -70,8 +68,6 @@ import { UsersModule } from './users/users.module';
     JwtModule,
     SmsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

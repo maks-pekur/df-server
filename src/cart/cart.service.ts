@@ -6,13 +6,11 @@ import { Cart } from './entities/cart.entity';
 
 @Injectable()
 export class CartService {
-  private readonly logger: Logger;
+  private readonly logger = new Logger(CartService.name);
   constructor(
     @InjectRepository(Cart)
     private cartRepository: Repository<Cart>,
-  ) {
-    this.logger = new Logger(CartService.name);
-  }
+  ) {}
 
   async getCartByCustomerId(customerId: string) {
     try {

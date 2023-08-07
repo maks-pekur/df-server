@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
@@ -18,6 +20,8 @@ import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
@@ -79,19 +83,22 @@ export class UsersService {
   }
 
   async findAll() {
-    const users = await this.usersRepository.find({
-      select: [
-        'id',
-        'name',
-        'email',
-        'phoneNumber',
-        'isPhoneVerified',
-        'createdAt',
-        'updatedAt',
-      ],
-    });
-
-    return users;
+    try {
+      const users = await this.usersRepository.find({
+        select: [
+          'id',
+          'name',
+          'email',
+          'phoneNumber',
+          'isPhoneVerified',
+          'createdAt',
+          'updatedAt',
+        ],
+      });
+      return users;
+    } catch (error) {
+      throw new NotFoundException('Users not found');
+    }
   }
 
   async findOne(id: string): Promise<User> {
@@ -113,32 +120,38 @@ export class UsersService {
 
   async update(id, updateUserDto: UpdateUserDto): Promise<User> {
     await this.usersRepository.update(id, updateUserDto);
-
     return this.findOne(id);
   }
 
   async delete(id: string) {
-    return await this.entityManager.transaction(async (transactionalEM) => {
-      const existUser = await transactionalEM.findOne(User, { where: { id } });
+    try {
+      return await this.entityManager.transaction(async (transactionalEM) => {
+        const existUser = await transactionalEM.findOne(User, {
+          where: { id },
+        });
 
-      if (!existUser) {
-        throw new BadRequestException('User not found');
-      }
+        if (!existUser) {
+          throw new BadRequestException('User not found');
+        }
 
-      const userCompanies = await transactionalEM
-        .createQueryBuilder(UserCompany, 'userCompany')
-        .innerJoin('userCompany.user', 'user')
-        .where('user.id = :userId', { userId: existUser.id })
-        .getMany();
+        const userCompanies = await transactionalEM
+          .createQueryBuilder(UserCompany, 'userCompany')
+          .innerJoin('userCompany.user', 'user')
+          .where('user.id = :userId', { userId: existUser.id })
+          .getMany();
 
-      await transactionalEM.remove(UserCompany, userCompanies);
-      await transactionalEM.delete(RefreshToken, { user: existUser });
-      await transactionalEM.delete(Order, { user: existUser });
-      await transactionalEM.delete(Review, { user: existUser });
+        await transactionalEM.remove(UserCompany, userCompanies);
+        await transactionalEM.delete(RefreshToken, { user: existUser });
+        await transactionalEM.delete(Order, { user: existUser });
+        await transactionalEM.delete(Review, { user: existUser });
 
-      await transactionalEM.delete(User, id);
+        await transactionalEM.delete(User, id);
 
-      return { message: 'User deleted successfully' };
-    });
+        return { message: 'User deleted successfully' };
+      });
+    } catch (error) {
+      this.logger.error(`Failed to delete user with ID ${id}.`, error.stack);
+      throw new InternalServerErrorException('Failed to delete user.');
+    }
   }
 }

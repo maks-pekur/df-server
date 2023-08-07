@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreatePromoCodeDto } from './dto/create-promo-code.dto';
 import { UpdatePromoCodeDto } from './dto/update-promo-code.dto';
 
 @Injectable()
 export class PromoCodesService {
+  private readonly logger = new Logger(PromoCodesService.name);
+
   create(createPromoCodeDto: CreatePromoCodeDto) {
     return 'This action adds a new promoCode';
   }

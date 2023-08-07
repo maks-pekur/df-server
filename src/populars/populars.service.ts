@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class PopularsService {
+  private readonly logger = new Logger(PopularsService.name);
+
   constructor() {}
 
   async add(productId: string) {

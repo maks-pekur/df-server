@@ -8,7 +8,7 @@ import { Request, Response } from 'express';
 import { ResponseError } from '../interfaces/error.interface';
 
 @Catch()
-export class CustomExceptionFilter implements ExceptionFilter {
+export class HttpExceptionFilter implements ExceptionFilter {
   catch(error: ResponseError, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -25,6 +25,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
       response.status(status).json({
         statusCode: status,
         message: error.message,
+        path: request.url,
         error: 'Internal Server Error',
       });
     }
