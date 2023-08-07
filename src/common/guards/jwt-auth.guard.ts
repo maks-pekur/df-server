@@ -1,6 +1,7 @@
 import {
   ExecutionContext,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,6 +10,7 @@ import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
+  private readonly logger = new Logger(JwtAuthGuard.name);
   constructor(
     private jwtService: JwtService,
     private userService: UsersService,
@@ -35,8 +37,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     try {
       payload = this.jwtService.verify(token);
     } catch (error) {
-      console.log('Verification error:', error);
-      throw new UnauthorizedException('Invalid token');
+      this.logger.error(`Verification error for token: ${token}`, error.stack);
+      throw new UnauthorizedException(`Invalid token: ${error.message}`);
     }
 
     const user = await this.userService.findOne(payload.userId);

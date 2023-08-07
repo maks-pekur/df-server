@@ -3,11 +3,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Company } from 'src/companies/entities/company.entity';
+import { RefreshToken } from 'src/jwt/entities/refresh-token.entity';
+import { Order } from 'src/orders/entities/order.entity';
+import { Review } from 'src/reviews/entities/review.entity';
 import { Role } from 'src/roles/entities/role.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserCompany } from './entities/user-company.entity';
@@ -23,48 +26,56 @@ export class UsersService {
     private companiesRepository: Repository<Company>,
     @InjectRepository(UserCompany)
     private userCompaniesRepository: Repository<UserCompany>,
+    @InjectEntityManager() private readonly entityManager: EntityManager,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const existUser = await this.usersRepository.findOne({
-      where: { email: createUserDto.email },
+    return await this.entityManager.transaction(async (transactionalEM) => {
+      const existUser = await transactionalEM.findOne(User, {
+        where: { email: createUserDto.email },
+      });
+      if (existUser) {
+        throw new BadRequestException('Email already exists');
+      }
+
+      const userRole = await transactionalEM.findOne(Role, {
+        where: { id: createUserDto.roleId },
+      });
+      if (!userRole) {
+        throw new NotFoundException(
+          `Role with ID "${createUserDto.roleId}" not found`,
+        );
+      }
+
+      const company = await transactionalEM.findOne(Company, {
+        where: { id: createUserDto.companyId },
+      });
+      if (!company) {
+        throw new NotFoundException(
+          `Company with ID "${createUserDto.companyId}" not found`,
+        );
+      }
+
+      const salt = await bcrypt.genSalt(10);
+
+      const user = transactionalEM.create(User, {
+        ...createUserDto,
+        password: await bcrypt.hash(createUserDto.password, salt),
+      });
+
+      await transactionalEM.save(User, user);
+
+      user.roles = [userRole];
+      await transactionalEM.save(User, user);
+
+      await transactionalEM.save(UserCompany, {
+        user,
+        company,
+        role: userRole,
+      });
+
+      return user;
     });
-    if (existUser) {
-      throw new BadRequestException('Email already exists');
-    }
-
-    const userRole = await this.rolesRepository.findOne({
-      where: { id: createUserDto.roleId },
-    });
-    if (!userRole) {
-      throw new NotFoundException(
-        `Role with ID "${createUserDto.roleId}" not found`,
-      );
-    }
-
-    const company = await this.companiesRepository.findOne({
-      where: { id: createUserDto.companyId },
-    });
-    if (!company) {
-      throw new NotFoundException(
-        `Company with ID "${createUserDto.companyId}" not found`,
-      );
-    }
-
-    const salt = await bcrypt.genSalt(10);
-
-    const user = await this.usersRepository.save({
-      ...createUserDto,
-      password: await bcrypt.hash(createUserDto.password, salt),
-    });
-
-    await this.userCompaniesRepository.save({
-      user,
-      company,
-      role: userRole,
-    });
-
-    return user;
   }
 
   async findAll() {
@@ -107,24 +118,27 @@ export class UsersService {
   }
 
   async delete(id: string) {
-    const existUser = await this.usersRepository.findOne({
-      where: { id },
+    return await this.entityManager.transaction(async (transactionalEM) => {
+      const existUser = await transactionalEM.findOne(User, { where: { id } });
+
+      if (!existUser) {
+        throw new BadRequestException('User not found');
+      }
+
+      const userCompanies = await transactionalEM
+        .createQueryBuilder(UserCompany, 'userCompany')
+        .innerJoin('userCompany.user', 'user')
+        .where('user.id = :userId', { userId: existUser.id })
+        .getMany();
+
+      await transactionalEM.remove(UserCompany, userCompanies);
+      await transactionalEM.delete(RefreshToken, { user: existUser });
+      await transactionalEM.delete(Order, { user: existUser });
+      await transactionalEM.delete(Review, { user: existUser });
+
+      await transactionalEM.delete(User, id);
+
+      return { message: 'User deleted successfully' };
     });
-
-    if (!existUser) {
-      throw new BadRequestException('User not found');
-    }
-
-    const userCompanies = await this.userCompaniesRepository
-      .createQueryBuilder('userCompany')
-      .innerJoin('userCompany.user', 'user')
-      .where('user.id = :userId', { userId: existUser.id })
-      .getMany();
-
-    await this.userCompaniesRepository.remove(userCompanies);
-
-    await this.usersRepository.delete(id);
-
-    return { message: 'User deleted successfully' };
   }
 }

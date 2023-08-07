@@ -4,19 +4,16 @@ import {
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
-  NotFoundException,
   Param,
   Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
-import { IUser } from 'src/common/interfaces/error.interface';
+import { IEnhancedRequest } from 'src/common/interfaces/request.interface';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { StoresService } from './stores.service';
@@ -28,9 +25,8 @@ export class StoreController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin', 'admin')
-  async create(@Req() req: Request, @Body() dto: CreateStoreDto) {
-    const user = req.user as IUser;
-    const store = await this.storeService.createStore(user.companyId, dto);
+  async create(@Req() req: IEnhancedRequest, @Body() dto: CreateStoreDto) {
+    const store = await this.storeService.createStore(req.user.companyId, dto);
     return store;
   }
 
@@ -59,18 +55,16 @@ export class StoreController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin', 'admin')
   async update(
-    @Req() req: Request,
+    @Req() req: IEnhancedRequest,
     @Param('storeId') storeId: string,
     @Body() dto: UpdateStoreDto,
   ) {
-    const user = req.user as IUser;
-
     if (!storeId) {
       throw new BadRequestException('storeId as required');
     }
 
     const store = await this.storeService.updateStore(
-      user.companyId,
+      req.user.companyId,
       storeId,
       dto,
     );
@@ -81,19 +75,11 @@ export class StoreController {
   @Delete('/:storeId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin', 'admin')
-  async delete(@Req() req: Request, @Param('storeId') storeId: string) {
-    const user = req.user as IUser;
-    const store = await this.storeService.findOne(user.companyId, storeId);
-
-    if (!store) {
-      throw new NotFoundException(`Store with id ${storeId} not found`);
-    }
-
-    try {
-      await this.storeService.remove(storeId);
-      return { message: 'Successfully removed' };
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
+  async delete(
+    @Req() req: IEnhancedRequest,
+    @Param('storeId') storeId: string,
+  ) {
+    await this.storeService.remove(storeId);
+    return { message: 'Successfully removed' };
   }
 }

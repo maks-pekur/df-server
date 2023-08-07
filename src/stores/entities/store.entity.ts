@@ -42,9 +42,7 @@ export class Store {
   @JoinTable()
   products: Product[];
 
-  @OneToOne(() => StopList, (stopList) => stopList.store, {
-    onDelete: 'CASCADE',
-  })
+  @OneToOne(() => StopList, (stopList) => stopList.store)
   @JoinColumn()
   stopList: StopList;
 

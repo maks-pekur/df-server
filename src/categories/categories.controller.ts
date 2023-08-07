@@ -10,11 +10,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
-import { IUser } from 'src/common/interfaces/error.interface';
+import { IEnhancedRequest } from 'src/common/interfaces/request.interface';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -26,9 +25,8 @@ export class CategoriesController {
   @Post('/add')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin', 'admin')
-  create(@Req() req: Request, @Body() dto: CreateCategoryDto) {
-    const user = req.user as IUser;
-    const category = this.categoriesService.create(user.companyId, dto);
+  create(@Req() req: IEnhancedRequest, @Body() dto: CreateCategoryDto) {
+    const category = this.categoriesService.create(req.user.companyId, dto);
 
     return category;
   }
@@ -55,13 +53,12 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin', 'admin')
   update(
-    @Req() req: Request,
+    @Req() req: IEnhancedRequest,
     @Param('categoryId') categoryId: string,
     @Body() dto: UpdateCategoryDto,
   ) {
-    const user = req.user as IUser;
     const category = this.categoriesService.update(
-      user.companyId,
+      req.user.companyId,
       categoryId,
       dto,
     );
@@ -71,9 +68,11 @@ export class CategoriesController {
   @Delete('/:categoryId/delete')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin', 'admin')
-  async remove(@Req() req: Request, @Param('categoryId') categoryId: string) {
-    const user = req.user as IUser;
-    await this.categoriesService.remove(user.companyId, categoryId);
+  async remove(
+    @Req() req: IEnhancedRequest,
+    @Param('categoryId') categoryId: string,
+  ) {
+    await this.categoriesService.remove(req.user.companyId, categoryId);
 
     return { message: 'Successfully removed' };
   }

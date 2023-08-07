@@ -4,12 +4,15 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { addDays, addMonths, addYears } from 'date-fns';
+import { Category } from 'src/categories/entities/category.entity';
 import { SubscriptionPeriod, SubscriptionStatus } from 'src/common/types';
+import { Product } from 'src/products/entities/product.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import { Subscription } from 'src/subscriptions/entities/subscription.entity';
-import { Repository } from 'typeorm';
+import { UserCompany } from 'src/users/entities/user-company.entity';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { CompanySubscription } from './entities/company-subscription.entity';
@@ -28,34 +31,49 @@ export class CompaniesService {
     private readonly companySubscriptionRepository: Repository<CompanySubscription>,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
+    @InjectEntityManager() private readonly entityManager: EntityManager,
   ) {}
 
   async createCompany(createCompanyDto: CreateCompanyDto) {
-    try {
-      const company = this.companyRepository.create(createCompanyDto);
-      const savedCompany = await this.companyRepository.save(company);
+    return await this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        try {
+          const company = this.companyRepository.create(createCompanyDto);
 
-      const subscription = await this.subscriptionRepository.findOne({
-        where: { id: createCompanyDto.subscriptionId },
-      });
+          const savedCompany = await transactionalEntityManager.save(
+            Company,
+            company,
+          );
 
-      if (!subscription) {
-        throw new BadRequestException('Subscription not found');
-      }
+          const subscription = await transactionalEntityManager.findOne(
+            Subscription,
+            {
+              where: { id: createCompanyDto.subscriptionId },
+            },
+          );
 
-      const companySubscription = new CompanySubscription();
-      companySubscription.company = savedCompany;
-      companySubscription.subscription = subscription;
-      companySubscription.startDate = new Date();
-      companySubscription.endDate = addDays(new Date(), 7);
-      companySubscription.status = SubscriptionStatus.TRIAL;
+          if (!subscription) {
+            throw new BadRequestException('Subscription not found');
+          }
 
-      await this.companySubscriptionRepository.save(companySubscription);
+          const companySubscription = new CompanySubscription();
+          companySubscription.company = savedCompany;
+          companySubscription.subscription = subscription;
+          companySubscription.startDate = new Date();
+          companySubscription.endDate = addDays(new Date(), 7);
+          companySubscription.status = SubscriptionStatus.TRIAL;
 
-      return savedCompany;
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
+          await transactionalEntityManager.save(
+            CompanySubscription,
+            companySubscription,
+          );
+
+          return savedCompany;
+        } catch (error) {
+          throw new InternalServerErrorException(error.message);
+        }
+      },
+    );
   }
 
   async findAll() {
@@ -110,63 +128,84 @@ export class CompaniesService {
     isPaymentPromised: boolean,
     period: SubscriptionPeriod,
   ): Promise<CompanySubscription> {
-    try {
-      const company = await this.companyRepository.findOne({
-        where: { name },
-      });
+    return await this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        try {
+          const company = await transactionalEntityManager.findOne(Company, {
+            where: { name },
+          });
 
-      if (!company) {
-        throw new BadRequestException('Company not found');
-      }
+          if (!company) {
+            throw new BadRequestException('Company not found');
+          }
 
-      const currentSubscription =
-        await this.companySubscriptionRepository.findOne({
-          where: {
-            company: { id: company.id },
-            status: SubscriptionStatus.ACTIVE || SubscriptionStatus.TRIAL,
-          },
-        });
+          const currentSubscription = await transactionalEntityManager.findOne(
+            CompanySubscription,
+            {
+              where: [
+                {
+                  company: { id: company.id },
+                  status: SubscriptionStatus.ACTIVE,
+                },
+                {
+                  company: { id: company.id },
+                  status: SubscriptionStatus.TRIAL,
+                },
+              ],
+            },
+          );
 
-      if (currentSubscription) {
-        currentSubscription.status = SubscriptionStatus.EXPIRED;
-        await this.companySubscriptionRepository.save(currentSubscription);
-      }
+          if (currentSubscription) {
+            currentSubscription.status = SubscriptionStatus.EXPIRED;
+            await transactionalEntityManager.save(
+              CompanySubscription,
+              currentSubscription,
+            );
+          }
 
-      const newSubscription = await this.subscriptionRepository.findOne({
-        where: { id: newSubscriptionId },
-      });
+          const newSubscription = await transactionalEntityManager.findOne(
+            Subscription,
+            {
+              where: { id: newSubscriptionId },
+            },
+          );
 
-      if (!newSubscription) {
-        throw new BadRequestException('Subscription not found');
-      }
+          if (!newSubscription) {
+            throw new BadRequestException('Subscription not found');
+          }
 
-      const companySubscription = new CompanySubscription();
+          const companySubscription = new CompanySubscription();
 
-      if (isPaymentPromised) {
-        companySubscription.status = SubscriptionStatus.PENDING;
-        companySubscription.startDate = new Date();
-        companySubscription.endDate = new Date();
-        companySubscription.endDate.setDate(
-          companySubscription.startDate.getDate() + PROMISED_DAYS,
-        );
-      } else {
-        companySubscription.status = SubscriptionStatus.ACTIVE;
-        companySubscription.startDate = currentSubscription
-          ? new Date(currentSubscription.endDate)
-          : new Date();
-        companySubscription.endDate =
-          period === SubscriptionPeriod.MONTHS
-            ? addMonths(companySubscription.startDate, 1)
-            : addYears(companySubscription.startDate, 1);
-      }
+          if (isPaymentPromised) {
+            companySubscription.status = SubscriptionStatus.PENDING;
+            companySubscription.startDate = new Date();
+            companySubscription.endDate = new Date();
+            companySubscription.endDate.setDate(
+              companySubscription.startDate.getDate() + PROMISED_DAYS,
+            );
+          } else {
+            companySubscription.status = SubscriptionStatus.ACTIVE;
+            companySubscription.startDate = currentSubscription
+              ? new Date(currentSubscription.endDate)
+              : new Date();
+            companySubscription.endDate =
+              period === SubscriptionPeriod.MONTHS
+                ? addMonths(companySubscription.startDate, 1)
+                : addYears(companySubscription.startDate, 1);
+          }
 
-      companySubscription.company = company;
-      companySubscription.subscription = newSubscription;
+          companySubscription.company = company;
+          companySubscription.subscription = newSubscription;
 
-      return this.companySubscriptionRepository.save(companySubscription);
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
+          return await transactionalEntityManager.save(
+            CompanySubscription,
+            companySubscription,
+          );
+        } catch (error) {
+          throw new InternalServerErrorException(error.message);
+        }
+      },
+    );
   }
 
   async updateCompany(id: string, updateCompanyDto: UpdateCompanyDto) {
@@ -179,25 +218,77 @@ export class CompaniesService {
   }
 
   async removeCompany(id: string) {
-    try {
-      const company = await this.companyRepository.findOne({
-        where: { id },
-        relations: ['stores'],
-      });
+    return await this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        const company = await transactionalEntityManager.findOne(Company, {
+          where: { id },
+          relations: [
+            'stores',
+            'userCompanies',
+            'categories',
+            'products',
+            'subscriptions',
+          ],
+        });
 
-      if (!company) {
-        throw new NotFoundException('Company not found');
-      }
+        if (!company) {
+          throw new NotFoundException('Company not found');
+        }
 
-      await Promise.all(
-        company.stores.map((store) => this.storeRepository.delete(store.id)),
-      );
+        const userCompanyIds = company.userCompanies.map((uc) => uc.id);
+        if (userCompanyIds.length > 0) {
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .delete()
+            .from(UserCompany)
+            .whereInIds(userCompanyIds)
+            .execute();
+        }
 
-      await this.companyRepository.delete(id);
+        const categoryIds = company.categories.map((category) => category.id);
+        if (categoryIds.length > 0) {
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .delete()
+            .from(Category)
+            .whereInIds(categoryIds)
+            .execute();
+        }
 
-      return { message: 'Company deleted successfully' };
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
+        const productIds = company.products.map((product) => product.id);
+        if (productIds.length > 0) {
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .delete()
+            .from(Product)
+            .whereInIds(productIds)
+            .execute();
+        }
+
+        const subscriptionIds = company.subscriptions.map((sub) => sub.id);
+        if (subscriptionIds.length > 0) {
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .delete()
+            .from(CompanySubscription)
+            .whereInIds(subscriptionIds)
+            .execute();
+        }
+
+        const storeIds = company.stores.map((store) => store.id);
+        if (storeIds.length > 0) {
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .delete()
+            .from(Store)
+            .whereInIds(storeIds)
+            .execute();
+        }
+
+        await transactionalEntityManager.delete(Company, id);
+
+        return { message: 'Company deleted successfully' };
+      },
+    );
   }
 }

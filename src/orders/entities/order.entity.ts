@@ -44,7 +44,7 @@ export class Order {
   store: Store;
 
   @ManyToOne(() => User, (user) => user.orders)
-  userId: User;
+  user: User;
 
   @OneToMany(() => Review, (review) => review.order)
   reviews: Review[];

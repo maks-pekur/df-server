@@ -23,28 +23,21 @@ export class Company {
   @Column({ nullable: true })
   description: string;
 
-  @OneToMany(() => Store, (store) => store.company, { onDelete: 'CASCADE' })
+  @OneToMany(() => Store, (store) => store.company)
   stores: Store[];
 
-  @OneToMany(() => Category, (category) => category.company, {
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => Category, (category) => category.company)
   categories: Category[];
 
-  @OneToMany(() => Product, (product) => product.company, {
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => Product, (product) => product.company)
   products: Product[];
 
-  @OneToMany(() => UserCompany, (userCompany) => userCompany.company, {
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => UserCompany, (userCompany) => userCompany.company)
   userCompanies: UserCompany[];
 
   @OneToMany(
     () => CompanySubscription,
     (companySubscription) => companySubscription.company,
-    { onDelete: 'CASCADE' },
   )
   subscriptions: CompanySubscription[];
 

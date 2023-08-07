@@ -27,7 +27,7 @@ export class User {
   @Column({ nullable: true })
   email: string;
 
-  @ManyToMany(() => Role, (role) => role.users)
+  @ManyToMany(() => Role, (role) => role.users, { cascade: true })
   @JoinTable({
     name: 'user_roles',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
@@ -45,7 +45,7 @@ export class User {
   @Column({ nullable: true })
   password: string;
 
-  @OneToMany(() => Order, (order) => order.userId)
+  @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 
   @OneToMany(() => Review, (review) => review.user)

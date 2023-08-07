@@ -9,11 +9,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
-import { IUser } from 'src/common/interfaces/error.interface';
+import { IEnhancedRequest } from 'src/common/interfaces/request.interface';
 import { SubscriptionPeriod } from 'src/common/types';
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -24,15 +23,15 @@ export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
   @Post('/add')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('superadmin')
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('superadmin')
   create(@Body() dto: CreateCompanyDto) {
     return this.companiesService.createCompany(dto);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('superadmin')
+  @Roles('admin')
   async findAll() {
     const companies = await this.companiesService.findAll();
     return companies;
@@ -48,15 +47,13 @@ export class CompaniesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin', 'admin')
   async updateSubscription(
-    @Req() req: Request,
+    @Req() req: IEnhancedRequest,
     @Body('newSubscriptionId') newSubscriptionId: string,
     @Body('isPaymentPromised') isPaymentPromised: boolean,
     @Body('period') period: SubscriptionPeriod,
   ) {
-    const user = req.user as IUser;
-
     return this.companiesService.updateSubscription(
-      user.companyId,
+      req.user.companyId,
       newSubscriptionId,
       isPaymentPromised,
       period,
@@ -67,22 +64,19 @@ export class CompaniesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('superadmin')
   updateCompany(
-    @Req() req: Request,
+    @Req() req: IEnhancedRequest,
     @Body() updateCompanyDto: UpdateCompanyDto,
   ) {
-    const user = req.user as IUser;
-
     return this.companiesService.updateCompany(
-      user.companyId,
+      req.user.companyId,
       updateCompanyDto,
     );
   }
 
-  @Delete('/delete')
+  @Delete('/:companyId/delete')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  removeCompany(@Req() req: Request) {
-    const user = req.user as IUser;
-    return this.companiesService.removeCompany(user.companyId);
+  removeCompany(@Param('companyId') companyId: string) {
+    return this.companiesService.removeCompany(companyId);
   }
 }

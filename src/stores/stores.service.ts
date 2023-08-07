@@ -5,11 +5,11 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { StopList } from 'src/stop-lists/entities/stop-list.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { Store } from './entities/store.entity';
@@ -26,6 +26,7 @@ export class StoresService {
     private orderRepository: Repository<Order>,
     @InjectRepository(Review)
     private reviewRepository: Repository<Review>,
+    @InjectEntityManager() private readonly entityManager: EntityManager,
   ) {
     this.logger = new Logger(StoresService.name);
   }
@@ -114,27 +115,39 @@ export class StoresService {
   }
 
   async remove(storeId: string) {
-    return await this.storeRepository.manager.transaction(async (manager) => {
-      const store = await manager.findOne(Store, {
-        where: { id: storeId },
-        relations: ['orders', 'reviews'],
-      });
+    return await this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        const store = await transactionalEntityManager.findOne(Store, {
+          where: { id: storeId },
+          relations: ['orders', 'reviews', 'stopList'],
+        });
 
-      if (!store) {
-        throw new BadRequestException('No store found');
-      }
+        if (!store) {
+          throw new NotFoundException('No store found');
+        }
 
-      for (const order of store.orders) {
-        order.store = null;
-        await manager.save(Order, order);
-      }
+        // Disassociate orders from the store
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .update(Order)
+          .set({ store: null })
+          .where('store = :store', { store: storeId })
+          .execute();
 
-      for (const review of store.reviews) {
-        review.store = null;
-        await manager.save(Review, review);
-      }
+        // Disassociate reviews from the store
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .update(Review)
+          .set({ store: null })
+          .where('store = :store', { store: storeId })
+          .execute();
 
-      return await manager.delete(Store, storeId);
-    });
+        if (store.stopList) {
+          await transactionalEntityManager.delete(StopList, store.stopList.id);
+        }
+
+        return await transactionalEntityManager.delete(Store, storeId);
+      },
+    );
   }
 }
