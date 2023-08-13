@@ -6,9 +6,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import slugify from 'slugify';
+import { CompaniesService } from 'src/companies/companies.service';
 import { Product } from 'src/products/entities/product.entity';
 import { Store } from 'src/stores/entities/store.entity';
+import { transliterate } from 'transliteration';
 import { Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -25,6 +26,7 @@ export class CategoriesService {
     private storeRepository: Repository<Store>,
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
+    private companyService: CompaniesService,
   ) {}
 
   async create(companyId: string, dto: CreateCategoryDto) {
@@ -41,7 +43,9 @@ export class CategoriesService {
 
       const newCategory = this.categoryRepository.create({
         name: dto.name,
-        slug: slugify(dto.name, { lower: true }),
+        slug: transliterate(dto.name)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/gi, '-'),
         company: { id: companyId },
       });
 
@@ -52,13 +56,19 @@ export class CategoriesService {
     }
   }
 
-  async findAll(companyId: string): Promise<Category[]> {
+  async findAll(slug: string): Promise<Category[]> {
     try {
-      const products = await this.categoryRepository.find({
-        where: { company: { id: companyId } },
+      const company = await this.companyService.findOneBySlug(slug);
+
+      if (!company) {
+        throw new NotFoundException(`Company ${slug} not found.`);
+      }
+      const categories = await this.categoryRepository.find({
+        where: { company: { id: company.id } },
+        relations: ['products'],
       });
 
-      return products;
+      return categories;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -88,7 +98,7 @@ export class CategoriesService {
     updateCategoryDto: UpdateCategoryDto,
   ) {
     const existCategory = await this.categoryRepository.findOne({
-      where: { name: updateCategoryDto.name },
+      where: { name: updateCategoryDto.name, company: { id: companyId } },
     });
 
     if (existCategory && existCategory.id !== categoryId) {
@@ -97,7 +107,9 @@ export class CategoriesService {
 
     await this.categoryRepository.update(categoryId, {
       ...updateCategoryDto,
-      slug: slugify(updateCategoryDto.name, { lower: true }),
+      slug: transliterate(updateCategoryDto.name)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/gi, '-'),
     });
 
     return this.findOne(companyId, categoryId);
@@ -106,19 +118,11 @@ export class CategoriesService {
   async remove(companyId: string, categoryId: string) {
     const category = await this.categoryRepository.findOne({
       where: { id: categoryId, company: { id: companyId } },
-      relations: ['company', 'stores', 'products'],
+      relations: ['company', 'products'],
     });
 
     if (!category) {
       throw new NotFoundException('Category not found');
-    }
-
-    for (const store of category.stores) {
-      const index = store.categories.findIndex((cat) => cat.id === categoryId);
-      if (index > -1) {
-        store.categories.splice(index, 1);
-        await this.storeRepository.save(store);
-      }
     }
 
     for (const product of category.products) {

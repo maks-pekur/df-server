@@ -23,6 +23,10 @@ export class CreateProductDto {
   })
   price: number;
 
+  @IsArray()
+  @IsOptional()
+  ingredientsIds: string[];
+
   @IsNumberString()
   @IsOptional()
   proteinAmount: number;
@@ -37,15 +41,10 @@ export class CreateProductDto {
 
   @IsNumberString()
   @IsOptional()
-  energyAmount: number;
-
-  @IsNumberString()
-  @IsOptional()
   caloriesAmount: number;
 
   @IsArray()
-  @IsOptional()
-  categoryIds: string[];
+  categories: string[];
 
   @IsArray()
   @IsOptional()
@@ -53,9 +52,9 @@ export class CreateProductDto {
 
   @IsString()
   @IsOptional()
-  measureUnitValue: string;
+  measureUnit: string;
 
   @IsString()
   @IsOptional()
-  measureUnit: string;
+  measureUnitValue: string;
 }

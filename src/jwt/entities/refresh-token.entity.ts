@@ -20,15 +20,18 @@ export class RefreshToken {
   @Column()
   userId: string;
 
+  @Column({ type: 'text', nullable: true })
+  userAgent: string;
+
   @Column()
   isRevoked: boolean;
+
+  @Column('timestamp')
+  expiryDate: Date;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
-
-  @Column('timestamp')
-  expiryDate: Date;
 
   @CreateDateColumn()
   createdAt: Date;

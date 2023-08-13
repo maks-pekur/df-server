@@ -1,7 +1,5 @@
-import { Category } from 'src/categories/entities/category.entity';
 import { Company } from 'src/companies/entities/company.entity';
 import { Order } from 'src/orders/entities/order.entity';
-import { Product } from 'src/products/entities/product.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { StopList } from 'src/stop-lists/entities/stop-list.entity';
 import { Story } from 'src/stories/entities/story.entity';
@@ -25,24 +23,21 @@ export class Store {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ default: '' })
+  @Column()
   name: string;
 
-  @Column({ default: '' })
+  @Column({ unique: true })
+  slug: string;
+
+  @Column({ nullable: true })
   description: string;
 
   @ManyToOne(() => Company, (company) => company.stores)
   company: Company;
 
-  @ManyToMany(() => Category, (category) => category.stores)
-  @JoinTable()
-  categories: Category[];
-
-  @ManyToMany(() => Product, (product) => product.stores)
-  @JoinTable()
-  products: Product[];
-
-  @OneToOne(() => StopList, (stopList) => stopList.store)
+  @OneToOne(() => StopList, (stopList) => stopList.store, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   stopList: StopList;
 

@@ -5,11 +5,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { UsersService } from 'src/users/users.service';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
-import { DecodedToken } from './token.interface';
+import { DecodedToken } from './interfaces';
 
 @Injectable()
 export class JwtService {
@@ -18,12 +18,17 @@ export class JwtService {
   constructor(
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @InjectEntityManager() private readonly entityManager: EntityManager,
+
     private readonly userService: UsersService,
     private readonly jwtService: NestJwtService,
   ) {}
 
-  async generateAccessToken(user: any) {
-    const existUser = await this.userService.findOne(user.id);
+  async generateAccessToken(user: any): Promise<string> {
+    const existUser = await this.userService.findOne(user.id).catch((err) => {
+      this.logger.error(err);
+      return null;
+    });
 
     const userCompany = existUser.userCompanies.find(
       (userCompany) => userCompany.company.id === user.companyId,
@@ -41,32 +46,60 @@ export class JwtService {
     return this.jwtService.signAsync(payload, { expiresIn: '30m' });
   }
 
-  async generateRefreshToken(user: any) {
-    const oldTokens = await this.refreshTokenRepository.find({
-      where: { userId: user.id },
+  async generateRefreshToken(
+    user: any,
+    userAgent: string,
+  ): Promise<RefreshToken> {
+    return await this.entityManager.transaction(async (transactionalEM) => {
+      try {
+        const refreshTokenRepository =
+          transactionalEM.getRepository(RefreshToken);
+
+        const existingToken = await refreshTokenRepository.findOne({
+          where: {
+            userId: user.id,
+            userAgent: userAgent,
+            isRevoked: false,
+          },
+        });
+
+        if (existingToken) {
+          return existingToken;
+        }
+
+        const oldTokens = await refreshTokenRepository.find({
+          where: { userId: user.id },
+        });
+
+        for (const oldToken of oldTokens) {
+          oldToken.isRevoked = true;
+          await refreshTokenRepository.save(oldToken);
+        }
+
+        const token = new RefreshToken();
+        token.userId = user.id;
+        token.isRevoked = false;
+        token.userAgent = userAgent;
+
+        const payload = { userId: user.id, companyId: user.companyId };
+        const refreshToken = await this.jwtService.signAsync(payload);
+
+        token.token = refreshToken;
+
+        const expiresIn = 60 * 60 * 24 * 15;
+        const expiryDate = new Date();
+        expiryDate.setSeconds(expiryDate.getSeconds() + expiresIn);
+        token.expiryDate = expiryDate;
+
+        return await refreshTokenRepository.save(token);
+      } catch (error) {
+        this.logger.error(
+          `Failed to generate refresh token for user ID ${user.id}.`,
+        );
+        this.logger.error(error.stack);
+        throw error;
+      }
     });
-
-    for (const oldToken of oldTokens) {
-      oldToken.isRevoked = true;
-      await this.refreshTokenRepository.save(oldToken);
-    }
-
-    const token = new RefreshToken();
-
-    token.userId = user.id;
-    token.isRevoked = false;
-
-    const payload = { userId: user.id, companyId: user.companyId };
-    const refreshToken = await this.jwtService.signAsync(payload);
-
-    token.token = refreshToken;
-
-    const expiresIn = 60 * 60 * 24 * 15;
-    const expiryDate = new Date();
-    expiryDate.setSeconds(expiryDate.getSeconds() + expiresIn);
-    token.expiryDate = expiryDate;
-
-    return await this.refreshTokenRepository.save(token);
   }
 
   async validateRefreshToken(token: string): Promise<boolean> {
@@ -118,9 +151,15 @@ export class JwtService {
   }
 
   async revokeRefreshToken(token: string) {
-    const refreshToken = await this.refreshTokenRepository.findOne({
-      where: { token },
-    });
+    const refreshToken = await this.refreshTokenRepository
+      .findOne({
+        where: { token },
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        return null;
+      });
+
     if (refreshToken) {
       refreshToken.isRevoked = true;
       await this.refreshTokenRepository.save(refreshToken);

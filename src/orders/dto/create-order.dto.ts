@@ -1,10 +1,6 @@
 import { IsNumberString, IsString } from 'class-validator';
-import { OrderType, PaymentMethod } from 'src/common/types';
-import {
-  IOrderItem,
-  OrderStatus,
-  PaymentStatus,
-} from '../../common/types/index';
+import { PaymentMethod, PaymentStatus } from 'src/payment/interfaces';
+import { IOrderItem, OrderStatus, OrderType } from '../interfaces';
 
 export class CreateOrderDto {
   @IsString()

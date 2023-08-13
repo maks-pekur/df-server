@@ -1,6 +1,5 @@
 import { Company } from 'src/companies/entities/company.entity';
 import { Product } from 'src/products/entities/product.entity';
-import { Store } from 'src/stores/entities/store.entity';
 import {
   Column,
   CreateDateColumn,
@@ -26,12 +25,18 @@ export class Category {
   @ManyToOne(() => Company, (company) => company.categories)
   company: Company;
 
-  @ManyToMany(() => Store, (store) => store.categories)
-  @JoinTable()
-  stores: Store[];
-
-  @ManyToMany(() => Product, (product) => product.categories, { eager: true })
-  @JoinTable()
+  @ManyToMany(() => Product, (product) => product.categories)
+  @JoinTable({
+    name: 'category_products',
+    joinColumn: {
+      name: 'category_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'product_id',
+      referencedColumnName: 'id',
+    },
+  })
   products: Product[];
 
   @CreateDateColumn()

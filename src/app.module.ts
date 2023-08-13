@@ -1,13 +1,15 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
 import { LoggerMiddleware } from './common/utils/logger-middleware';
 import { CompaniesModule } from './companies/companies.module';
-import { FilesModule } from './files/files.module';
+import { ImagesModule } from './images/images.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
+import { JwtAuthGuard } from './jwt/guards/jwt-auth.guard';
 import { JwtModule } from './jwt/jwt.module';
 import { ModifiersModule } from './modifiers/modifiers.module';
 import { OrdersModule } from './orders/orders.module';
@@ -33,6 +35,7 @@ import { UsersModule } from './users/users.module';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get('DB_HOST'),
@@ -43,7 +46,6 @@ import { UsersModule } from './users/users.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
       }),
-      inject: [ConfigService],
     }),
     ProductsModule,
     CategoriesModule,
@@ -58,7 +60,6 @@ import { UsersModule } from './users/users.module';
     ModifiersModule,
     AuthModule,
     UsersModule,
-    FilesModule,
     ReviewsModule,
     StopListsModule,
     CompaniesModule,
@@ -67,6 +68,13 @@ import { UsersModule } from './users/users.module';
     RolesModule,
     JwtModule,
     SmsModule,
+    ImagesModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {

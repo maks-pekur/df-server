@@ -18,15 +18,6 @@ export class IngredientGroup {
   @Column()
   name: string;
 
-  @Column()
-  ingredientsIds: string;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
-
   @ManyToMany(() => Ingredient, (ingredient) => ingredient.groups, {
     eager: true,
   })
@@ -35,4 +26,10 @@ export class IngredientGroup {
 
   @ManyToMany(() => Product, (product) => product.ingredientGroups)
   products: Product[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

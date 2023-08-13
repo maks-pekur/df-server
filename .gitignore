@@ -37,3 +37,4 @@ lerna-debug.log*
 /serviceAccountKey.json
 .*.env*
 .vercel
+/static/

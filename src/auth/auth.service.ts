@@ -55,19 +55,13 @@ export class AuthService {
     throw new UnauthorizedException('Email or password is incorrect');
   }
 
-  async login(user: any) {
+  async login(user: any, agent: string) {
     const accessToken = await this.jwtService.generateAccessToken(user);
 
-    const existingRefreshToken = await this.refreshTokenRepository.findOne({
-      where: { userId: user.id },
-    });
-
-    if (existingRefreshToken) {
-      existingRefreshToken.isRevoked = true;
-      await this.refreshTokenRepository.save(existingRefreshToken);
-    }
-
-    const refreshToken = await this.jwtService.generateRefreshToken(user);
+    const refreshToken = await this.jwtService.generateRefreshToken(
+      user,
+      agent,
+    );
 
     await this.refreshTokenRepository.save(refreshToken);
 
@@ -83,16 +77,6 @@ export class AuthService {
       refreshToken,
       user: userForClient,
     };
-  }
-
-  async getMe(user: any): Promise<any> {
-    const existUser = await this.usersRepository.findOne({
-      where: { id: user.id },
-    });
-
-    const { password, ...result } = existUser;
-
-    return result;
   }
 
   async checkCompanies(email: string) {
@@ -116,6 +100,7 @@ export class AuthService {
       .map((userCompany) => ({
         companyId: userCompany.company.id,
         companyName: userCompany.company.name,
+        companySlug: userCompany.company.slug,
         role: userCompany.role.name,
       }));
 

@@ -1,10 +1,12 @@
-import { ICartItem, OrderType, PaymentMethod } from 'src/common/types';
+import { OrderType } from 'src/orders/interfaces';
+import { PaymentMethod } from 'src/payment/interfaces';
 import {
   Column,
   CreateDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ICartItem } from '../interfaces';
 
 export class Cart {
   @PrimaryGeneratedColumn('uuid')

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -9,6 +10,7 @@ import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Company } from 'src/companies/entities/company.entity';
 import { RefreshToken } from 'src/jwt/entities/refresh-token.entity';
+import { JwtPayload } from 'src/jwt/interfaces';
 import { Order } from 'src/orders/entities/order.entity';
 import { Review } from 'src/reviews/entities/review.entity';
 import { Role } from 'src/roles/entities/role.entity';
@@ -25,12 +27,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    @InjectRepository(Role) private rolesRepository: Repository<Role>,
-    @InjectRepository(Company)
-    private companiesRepository: Repository<Company>,
-    @InjectRepository(UserCompany)
-    private userCompaniesRepository: Repository<UserCompany>,
-    @InjectEntityManager() private readonly entityManager: EntityManager,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -118,12 +116,63 @@ export class UsersService {
     return user;
   }
 
-  async update(id, updateUserDto: UpdateUserDto): Promise<User> {
-    await this.usersRepository.update(id, updateUserDto);
-    return this.findOne(id);
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    return await this.entityManager.transaction(async (transactionalEM) => {
+      const user = await transactionalEM.findOne(User, { where: { id } });
+      if (!user) {
+        throw new NotFoundException(`User with ID "${id}" not found`);
+      }
+
+      // Check for the company relationship
+      const userCompanyRelation = await transactionalEM.findOne(UserCompany, {
+        where: { id: user.id, company: { id: updateUserDto.companyId } },
+      });
+
+      const userRole = await transactionalEM.findOne(Role, {
+        where: { id: updateUserDto.roleId },
+      });
+      if (!userRole) {
+        throw new NotFoundException(
+          `Role with ID "${updateUserDto.roleId}" not found`,
+        );
+      }
+
+      const company = await transactionalEM.findOne(Company, {
+        where: { id: updateUserDto.companyId },
+      });
+      if (!company) {
+        throw new NotFoundException(
+          `Company with ID "${updateUserDto.companyId}" not found`,
+        );
+      }
+
+      if (userCompanyRelation) {
+        // If the relation exists, just update the role
+        userCompanyRelation.role = userRole;
+        await transactionalEM.save(UserCompany, userCompanyRelation);
+      } else {
+        // If the relation does not exist, create a new relation
+        const newUserCompany = transactionalEM.create(UserCompany, {
+          user,
+          company,
+          role: userRole,
+        });
+        await transactionalEM.save(UserCompany, newUserCompany);
+      }
+
+      // Now update the other fields of the user
+      Object.assign(user, updateUserDto);
+      await transactionalEM.save(User, user);
+
+      return user;
+    });
   }
 
-  async delete(id: string) {
+  async delete(id: string, user: JwtPayload) {
+    if (user.userId !== id) {
+      throw new ForbiddenException();
+    }
+
     try {
       return await this.entityManager.transaction(async (transactionalEM) => {
         const existUser = await transactionalEM.findOne(User, {

@@ -1,3 +1,4 @@
+import { Company } from 'src/companies/entities/company.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { StopList } from 'src/stop-lists/entities/stop-list.entity';
 import {
@@ -5,6 +6,7 @@ import {
   CreateDateColumn,
   Entity,
   ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -18,13 +20,13 @@ export class Ingredient {
   @Column()
   name: string;
 
-  @Column({ default: 0 })
+  @Column('double precision')
   price: number;
 
   @Column()
   imageUrl: string;
 
-  @ManyToMany(() => Product, (product) => product.ingredients)
+  @ManyToMany(() => Product)
   products: Product[];
 
   @ManyToMany(() => StopList, (stopList) => stopList.products)
@@ -35,6 +37,9 @@ export class Ingredient {
 
   @ManyToMany(() => IngredientGroup, (group) => group.ingredients)
   groups: IngredientGroup[];
+
+  @ManyToOne(() => Company, (company) => company.ingredients)
+  company: Company;
 
   @CreateDateColumn()
   createdAt: Date;

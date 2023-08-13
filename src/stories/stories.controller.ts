@@ -12,8 +12,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { RolesGuard } from 'src/roles/guards/roles.guard';
+import { Role } from 'src/roles/interfaces';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { StoriesService } from './stories.service';
@@ -23,8 +23,8 @@ export class StoriesController {
   constructor(private readonly storiesService: StoriesService) {}
 
   @Post()
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @UploadedFile() file: Express.Multer.File,
@@ -47,8 +47,8 @@ export class StoriesController {
   }
 
   @Patch(':id')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   @UseInterceptors(FileInterceptor('image'))
   async update(
     @UploadedFile() file: Express.Multer.File,
@@ -60,8 +60,8 @@ export class StoriesController {
   }
 
   @Delete(':id')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async remove(@Param('id') id: string) {
     await this.storiesService.remove(id);
     return { message: 'Story successfully removed' };

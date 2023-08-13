@@ -8,16 +8,17 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { RolesGuard } from 'src/roles/guards/roles.guard';
+import { Role } from 'src/roles/interfaces';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { PermissionsService } from './permissions.service';
 
 @Controller('permissions')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('superadmin')
+@UseGuards(RolesGuard)
+@Roles(Role.SUPERADMIN)
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
 

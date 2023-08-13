@@ -7,6 +7,10 @@ export class CreateCompanyDto {
 
   @IsString()
   @IsNotEmpty()
+  slug: string;
+
+  @IsString()
+  @IsNotEmpty()
   subscriptionId: string;
 
   @IsString()

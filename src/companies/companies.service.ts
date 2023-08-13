@@ -8,10 +8,13 @@ import {
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { addDays, addMonths, addYears } from 'date-fns';
 import { Category } from 'src/categories/entities/category.entity';
-import { SubscriptionPeriod, SubscriptionStatus } from 'src/common/types';
 import { Product } from 'src/products/entities/product.entity';
 import { Store } from 'src/stores/entities/store.entity';
 import { Subscription } from 'src/subscriptions/entities/subscription.entity';
+import {
+  SubscriptionPeriod,
+  SubscriptionStatus,
+} from 'src/subscriptions/interfaces';
 import { UserCompany } from 'src/users/entities/user-company.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -28,13 +31,8 @@ export class CompaniesService {
   constructor(
     @InjectRepository(Company)
     private readonly companyRepository: Repository<Company>,
-    @InjectRepository(Store)
-    private readonly storeRepository: Repository<Store>,
-    @InjectRepository(CompanySubscription)
-    private readonly companySubscriptionRepository: Repository<CompanySubscription>,
-    @InjectRepository(Subscription)
-    private readonly subscriptionRepository: Repository<Subscription>,
-    @InjectEntityManager() private readonly entityManager: EntityManager,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) {}
 
   async createCompany(createCompanyDto: CreateCompanyDto) {
@@ -56,6 +54,9 @@ export class CompaniesService {
           );
 
           if (!subscription) {
+            this.logger.warn(
+              `Subscription with ID ${createCompanyDto.subscriptionId} not found.`,
+            );
             throw new BadRequestException('Subscription not found');
           }
 
@@ -73,6 +74,9 @@ export class CompaniesService {
 
           return savedCompany;
         } catch (error) {
+          this.logger.error(
+            `Error when trying to create company: ${error.message}`,
+          );
           throw new InternalServerErrorException(error.message);
         }
       },
@@ -92,13 +96,18 @@ export class CompaniesService {
     }
   }
 
-  async findOne(name: string) {
+  async findOneBySlug(slug: string) {
     try {
       const company = await this.companyRepository
         .createQueryBuilder('company')
         .select(['company.id', 'company.name', 'company.description'])
         .leftJoin('company.stores', 'stores')
-        .addSelect(['stores.id', 'stores.name', 'stores.description'])
+        .addSelect([
+          'stores.id',
+          'stores.name',
+          'stores.description',
+          'stores.slug',
+        ])
         .leftJoinAndSelect('company.subscriptions', 'subscriptions')
         .leftJoin('subscriptions.subscription', 'subscription')
         .addSelect([
@@ -112,21 +121,37 @@ export class CompaniesService {
           'permissions.name',
           'permissions.description',
         ])
-        .where('LOWER(company.name) = LOWER(:name)', { name })
+        .where('LOWER(company.slug) = LOWER(:slug)', { slug })
         .getOne();
 
       if (!company) {
-        throw new NotFoundException(`Company with ID ${name} not found.`);
+        this.logger.warn(`Company with slug ${slug} not found.`);
+        throw new NotFoundException(`Company with slug ${slug} not found`);
       }
 
       return company;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      this.logger.error(
+        `Error when trying to find company with slug ${slug}: ${error.message}`,
+      );
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  async findOneById(id: string) {
+    try {
+      const company = await this.companyRepository.findOne({ where: { id } });
+      return company;
+    } catch (error) {
+      this.logger.error(
+        `Error when trying to find company with id ${id}: ${error.message}`,
+      );
+      throw new NotFoundException(error.message);
     }
   }
 
   async updateSubscription(
-    name: string,
+    slug: string,
     newSubscriptionId: string,
     isPaymentPromised: boolean,
     period: SubscriptionPeriod,
@@ -135,10 +160,11 @@ export class CompaniesService {
       async (transactionalEntityManager) => {
         try {
           const company = await transactionalEntityManager.findOne(Company, {
-            where: { name },
+            where: { slug },
           });
 
           if (!company) {
+            this.logger.warn(`Company with slug ${slug} not found`);
             throw new BadRequestException('Company not found');
           }
 
@@ -235,6 +261,7 @@ export class CompaniesService {
         });
 
         if (!company) {
+          this.logger.warn(`Company with ID ${id} not found for deletion.`);
           throw new NotFoundException('Company not found');
         }
 

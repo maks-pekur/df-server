@@ -4,7 +4,6 @@ import { IngredientGroup } from 'src/ingredients/entities/ingredient-group.entit
 import { Ingredient } from 'src/ingredients/entities/ingredient.entity';
 import { ModifierGroup } from 'src/modifiers/entities/modifire-group.entity';
 import { StopList } from 'src/stop-lists/entities/stop-list.entity';
-import { Store } from 'src/stores/entities/store.entity';
 import {
   Column,
   CreateDateColumn,
@@ -24,37 +23,34 @@ export class Product {
   @Column()
   name: string;
 
-  @Column({ default: '' })
+  @Column({ nullable: true })
   description: string;
 
-  @Column({ default: 0 })
+  @Column('double precision')
   price: number;
 
-  @Column({ default: '' })
+  @Column()
   measureUnit: string;
 
-  @Column({ default: '' })
+  @Column()
   measureUnitValue: string;
 
-  @Column('simple-array', { nullable: true })
-  imageUrls: string[];
+  @Column()
+  imageUrl: string;
 
   @Column({ default: 'good' })
   type: string;
 
-  @Column({ default: 0 })
+  @Column('double precision', { nullable: true })
   caloriesAmount: number;
 
-  @Column({ default: 0 })
-  energyAmount: number;
-
-  @Column({ default: 0 })
+  @Column('double precision', { nullable: true })
   proteinAmount: number;
 
-  @Column({ default: 0 })
+  @Column('double precision', { nullable: true })
   carbohydrateAmount: number;
 
-  @Column({ default: 0 })
+  @Column('double precision', { nullable: true })
   fatAmount: number;
 
   @ManyToMany(() => Category, (category) => category.products)
@@ -63,15 +59,10 @@ export class Product {
   @ManyToOne(() => Company, (company) => company.products)
   company: Company;
 
-  @ManyToMany(() => Store, (store) => store.products)
-  stores: Store[];
-
   @ManyToMany(() => StopList, (stopList) => stopList.products)
   stopLists: StopList[];
 
-  @ManyToMany(() => Ingredient, (ingredient) => ingredient.products, {
-    eager: true,
-  })
+  @ManyToMany(() => Ingredient)
   @JoinTable()
   ingredients: Ingredient[];
 

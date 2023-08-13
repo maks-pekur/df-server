@@ -7,15 +7,17 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { IEnhancedRequest } from 'src/common/interfaces/request.interface';
+import { IEnhancedRequest } from 'src/common/interfaces';
+import { RolesGuard } from 'src/roles/guards/roles.guard';
+import { Role } from 'src/roles/interfaces';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
+import { Store } from './entities/store.entity';
 import { StoresService } from './stores.service';
 
 @Controller('stores')
@@ -23,63 +25,61 @@ export class StoreController {
   constructor(private readonly storeService: StoresService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('superadmin', 'admin')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async create(@Req() req: IEnhancedRequest, @Body() dto: CreateStoreDto) {
     const store = await this.storeService.createStore(req.user.companyId, dto);
     return store;
   }
 
-  @Get('/:companyId')
-  async findAll(@Param('companyId') companyId: string) {
-    if (!companyId) {
-      throw new BadRequestException('сompanyId is required');
+  @Get()
+  async findAll(@Query('company') companySlug: string) {
+    if (!companySlug) {
+      throw new BadRequestException('company is required');
     }
-    const stores = await this.storeService.findAll(companyId);
+    const stores = await this.storeService.findAll(companySlug);
     return stores;
   }
 
-  @Get('/:companyId/:storeId')
+  @Get('/:storeSlug')
   async findOne(
-    @Param('companyId') companyId: string,
-    @Param('storeId') storeId: string,
+    @Query('company') companySlug: string,
+    @Param('storeSlug') storeSlug: string,
   ) {
-    if (!companyId || !storeId) {
+    if (!companySlug || !storeSlug) {
       throw new BadRequestException('Both companyId and id are required');
     }
-    const store = await this.storeService.findOne(companyId, storeId);
+    const store = await this.storeService.findOne(companySlug, storeSlug);
     return store;
   }
 
-  @Patch('/:storeId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('superadmin', 'admin')
+  @Patch('/:storeSlug')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async update(
     @Req() req: IEnhancedRequest,
-    @Param('storeId') storeId: string,
+    @Param('storeSlug') storeSlug: string,
     @Body() dto: UpdateStoreDto,
-  ) {
-    if (!storeId) {
-      throw new BadRequestException('storeId as required');
+  ): Promise<Store> {
+    if (!storeSlug) {
+      throw new BadRequestException('storeSlug is required');
     }
 
-    const store = await this.storeService.updateStore(
+    return await this.storeService.updateStore(
       req.user.companyId,
-      storeId,
+      storeSlug,
       dto,
     );
-
-    return store;
   }
 
-  @Delete('/:storeId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('superadmin', 'admin')
+  @Delete('/:storeSlug')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async delete(
     @Req() req: IEnhancedRequest,
-    @Param('storeId') storeId: string,
+    @Param('storeSlug') storeSlug: string,
   ) {
-    await this.storeService.remove(storeId);
+    await this.storeService.remove(req.user.companyId, storeSlug);
     return { message: 'Successfully removed' };
   }
 }

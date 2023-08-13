@@ -7,5 +7,9 @@ export class CreateStoreDto {
 
   @IsString()
   @IsOptional()
+  slug: string;
+
+  @IsString()
+  @IsOptional()
   description: string;
 }

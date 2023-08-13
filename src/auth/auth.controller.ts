@@ -8,40 +8,52 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { CurrentUser, Public } from 'src/common/decorators';
+import { JwtPayload } from 'src/jwt/interfaces';
 import { JwtService } from 'src/jwt/jwt.service';
 import { SmsService } from 'src/sms/sms.service';
-import { LocalAuthGuard } from '../common/guards/local-auth.guard';
 import { AuthService } from './auth.service';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
-    private jwtService: JwtService,
-    private smsService: SmsService,
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+    private readonly smsService: SmsService,
+    private readonly configService: ConfigService,
   ) {}
 
+  @Public()
   @Post('/sign-in')
   @UseGuards(LocalAuthGuard)
   async login(@Req() req, @Res() res: Response) {
+    const isProduction = this.configService.get('IS_PRODUCTION') === 'true';
+
+    const agent = req.headers['user-agent'];
+
     const { accessToken, refreshToken, user } = await this.authService.login(
       req.user,
+      agent,
     );
 
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
+      secure: isProduction,
     });
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
+      secure: isProduction,
     });
 
     return res.send(user);
   }
 
+  @Public()
   @Post('/check-companies')
   async checkCompanies(@Body('email') email: string) {
     return await this.authService.checkCompanies(email);
@@ -79,20 +91,17 @@ export class AuthController {
   }
 
   @Get('/me')
-  @UseGuards(JwtAuthGuard)
-  async getMe(@Req() req: Request, @Res() res: Response) {
-    if (!req.cookies.accessToken) {
-      return res.status(401).send({ message: 'Unauthorized' });
-    }
-    const user = await this.authService.getMe(req.user);
-    return res.status(200).send(user);
+  async getMe(@CurrentUser() user: JwtPayload) {
+    return user;
   }
 
+  @Public()
   @Post('/sign-in/phone')
   signInWithPhoneNumber(@Body('phoneNumber') phoneNumber: string) {
     return this.smsService.sendOtp(phoneNumber);
   }
 
+  @Public()
   @Post('/sign-in/phone/verify')
   verifyOtp(
     @Body('phoneNumber') phoneNumber: string,

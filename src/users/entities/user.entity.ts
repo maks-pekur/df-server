@@ -21,7 +21,7 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: true })
+  @Column({ unique: true })
   name: string;
 
   @Column({ nullable: true })
@@ -65,4 +65,8 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  constructor(user: User) {
+    Object.assign(this, user);
+  }
 }

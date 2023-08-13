@@ -1,19 +1,15 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumberString, IsString } from 'class-validator';
 
 export class CreateIngredientDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({
+    message: 'Name is required',
+  })
   name: string;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @IsNumberString()
+  @IsNotEmpty({
+    message: 'Price is required',
+  })
   price: number;
-
-  @IsString()
-  @IsNotEmpty()
-  imageUrl: string;
-
-  @IsString()
-  @IsOptional()
-  groupId?: string[];
 }

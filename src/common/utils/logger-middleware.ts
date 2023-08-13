@@ -1,10 +1,9 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
-import { EmojiLogger } from './emoji-logger';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
-  private logger = new EmojiLogger();
+  private logger = new Logger();
 
   use(request: Request, response: Response, next: NextFunction): void {
     const { ip, method, originalUrl } = request;

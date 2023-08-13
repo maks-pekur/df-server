@@ -7,14 +7,17 @@ import {
   Param,
   Patch,
   Post,
-  UploadedFiles,
+  Query,
+  Req,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express/multer';
+import { FileInterceptor } from '@nestjs/platform-express/multer';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { IEnhancedRequest } from 'src/common/interfaces';
+import { RolesGuard } from 'src/roles/guards/roles.guard';
+import { Role } from 'src/roles/interfaces';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
@@ -23,59 +26,78 @@ import { ProductsService } from './products.service';
 export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
-  @Get('/:companyId')
-  async findAll(@Param('companyId') companyId: string) {
-    if (!companyId) {
-      throw new BadRequestException('СompanyId is required');
+  @Post('/add')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
+  @UseInterceptors(FileInterceptor('file'))
+  async create(
+    @Req() req: IEnhancedRequest,
+    @Body() dto: CreateProductDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      console.error('File not provided');
+      throw new Error('File not provided');
+    }
+    return await this.productService.createProduct(
+      req.user.companyId,
+      dto,
+      file,
+    );
+  }
+
+  @Get()
+  async findAll(@Query('company') companySlug: string) {
+    if (!companySlug) {
+      throw new BadRequestException('Company is required');
     }
 
-    const products = await this.productService.findAll(companyId);
-
+    const products = await this.productService.findAll(companySlug);
     return products;
   }
 
-  @Get('/:companyId/:id')
+  @Get('/store/:storeSlug')
+  async findProductsForStore(
+    @Query('company') companySlug: string,
+    @Param('storeSlug') storeSlug: string,
+  ) {
+    return await this.productService.findProductsForStore(
+      companySlug,
+      storeSlug,
+    );
+  }
+
+  @Get('/detail/:id')
   async findOne(
-    @Param('companyId') companyId: string,
+    @Query('company') companySlug: string,
     @Param('id') id: string,
   ) {
-    if (!companyId || !id) {
-      throw new BadRequestException('Both companyId and id are required');
+    if (!companySlug || !id) {
+      throw new BadRequestException('Both companySlug and id are required');
     }
 
-    const product = await this.productService.findOne(companyId, id);
+    const product = await this.productService.findOne(companySlug, id);
 
     return product;
   }
 
-  @Post()
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @UseInterceptors(FilesInterceptor('files'))
-  async createProduct(
-    @Body() dto: CreateProductDto,
-    @UploadedFiles() files: Express.Multer.File[],
-  ) {
-    return this.productService.createProduct(dto, files);
-  }
-
-  @Patch('/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @UseInterceptors(FilesInterceptor('files'))
+  @Patch('/update/:id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
+  @UseInterceptors(FileInterceptor('file'))
   async update(
     @Param('id') id: string,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFile() file: Express.Multer.File,
     @Body() dto: UpdateProductDto,
   ) {
-    return await this.productService.updateProduct(id, dto, files);
+    return await this.productService.updateProduct(id, dto, file);
   }
 
-  @Delete('/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  async delete(@Param('id') id: string) {
-    await this.productService.removeProduct(id);
+  @Delete('/delete/:id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
+  async delete(@Req() req: IEnhancedRequest, @Param('id') id: string) {
+    await this.productService.removeProduct(req.user.companyId, id);
     return { message: 'Product successfully deleted' };
   }
 }

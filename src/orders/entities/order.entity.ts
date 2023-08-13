@@ -1,9 +1,4 @@
-import {
-  OrderStatus,
-  OrderType,
-  PaymentMethod,
-  PaymentStatus,
-} from 'src/common/types';
+import { PaymentMethod, PaymentStatus } from 'src/payment/interfaces';
 import { Review } from 'src/reviews/entities/review.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
@@ -15,6 +10,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { OrderStatus, OrderType } from '../interfaces';
 import { Store } from './../../stores/entities/store.entity';
 
 @Entity()
